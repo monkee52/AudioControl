@@ -1,8 +1,6 @@
 #include "stdafx.h"
 
 #include "AudioControl.h"
-#include "Utilities.h"
-#include "AudioDevice.h"
 
 namespace AydenIO {
 	namespace AudioControl {
@@ -10,6 +8,7 @@ namespace AydenIO {
 			this->pDevice = pDevice;
 			this->pDevice->AddRef();
 
+			// Init properties
 			IPropertyStore* pProps = nullptr;
 
 			HRESULT hr = this->pDevice->OpenPropertyStore(STGM_READ, &pProps);
@@ -19,6 +18,53 @@ namespace AydenIO {
 			}
 
 			this->pProps = pProps;
+
+			// Cache ID
+			LPWSTR pwszId = nullptr;
+
+			hr = this->pDevice->GetId(&pwszId);
+
+			if (FAILED(hr)) {
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			String^ id = gcnew String(pwszId);
+
+			CoTaskMemFree(pwszId);
+
+			this->_id = id;
+
+			// Get endpoint for device
+			IMMEndpoint* pEndpoint = nullptr;
+
+			hr = this->pDevice->QueryInterface(__uuidof(IMMEndpoint), (void**)&pEndpoint);
+
+			if (FAILED(hr)) {
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			// Cache role
+			EDataFlow eFlow;
+
+			hr = pEndpoint->GetDataFlow(&eFlow);
+
+			if (FAILED(hr)) {
+				// Cleanup
+				if (pEndpoint != nullptr) {
+					pEndpoint->Release();
+					pEndpoint = nullptr;
+				}
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			// Cleanup
+			if (pEndpoint != nullptr) {
+				pEndpoint->Release();
+				pEndpoint = nullptr;
+			}
+
+			this->_type = (DeviceType)eFlow;
 		}
 
 		/* private */ AudioDevice::~AudioDevice() {
@@ -38,19 +84,23 @@ namespace AydenIO {
 		}
 
 		/* public */ String^ AudioDevice::Id::get() {
-			LPWSTR pwszId = nullptr;
+			return this->_id;
+		}
 
-			HRESULT hr = this->pDevice->GetId(&pwszId);
+		/* public */ DeviceState AudioDevice::State::get() {
+			DWORD dwState = 0;
+
+			HRESULT hr = this->pDevice->GetState(&dwState);
 
 			if (FAILED(hr)) {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
-			String^ id = gcnew String(pwszId);
+			return (DeviceState)dwState;
+		}
 
-			CoTaskMemFree(pwszId);
-
-			return id;
+		/* public */ DeviceType AudioDevice::Type::get() {
+			return this->_type;
 		}
 
 		/* public */ String^ AudioDevice::Name::get() {
@@ -120,6 +170,186 @@ namespace AydenIO {
 			PropVariantClear(&varName);
 
 			return name;
+		}
+
+		/* public */ int AudioDevice::DefaultChannelCount::get() {
+			if (this->State == DeviceState::NotPresent) {
+				return -1;
+			}
+
+			// Prepare to get value
+			PROPVARIANT varName;
+
+			PropVariantInit(&varName);
+
+			HRESULT hr = this->pProps->GetValue(PKEY_AudioEngine_OEMFormat, &varName);
+
+			if (FAILED(hr)) {
+				// Cleanup
+				PropVariantClear(&varName);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			WAVEFORMATEX* deviceInfo = (WAVEFORMATEX*)varName.blob.pBlobData;
+
+			int channelCount = deviceInfo->nChannels;
+
+			// Cleanup
+			deviceInfo = nullptr;
+			PropVariantClear(&varName);
+
+			return channelCount;
+		}
+
+		/* public */ int AudioDevice::DefaultSampleRate::get() {
+			if (this->State == DeviceState::NotPresent) {
+				return -1;
+			}
+
+			// Prepare to get value
+			PROPVARIANT varName;
+
+			PropVariantInit(&varName);
+
+			HRESULT hr = this->pProps->GetValue(PKEY_AudioEngine_OEMFormat, &varName);
+
+			if (FAILED(hr)) {
+				// Cleanup
+				PropVariantClear(&varName);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			WAVEFORMATEX* deviceInfo = (WAVEFORMATEX*)varName.blob.pBlobData;
+
+			int sampleRate = deviceInfo->nSamplesPerSec;
+
+			// Cleanup
+			deviceInfo = nullptr;
+			PropVariantClear(&varName);
+
+			return sampleRate;
+		}
+
+		/* public */ int AudioDevice::DefaultBitDepth::get() {
+			if (this->State == DeviceState::NotPresent) {
+				return -1;
+			}
+
+			// Prepare to get value
+			PROPVARIANT varName;
+
+			PropVariantInit(&varName);
+
+			HRESULT hr = this->pProps->GetValue(PKEY_AudioEngine_OEMFormat, &varName);
+
+			if (FAILED(hr)) {
+				// Cleanup
+				PropVariantClear(&varName);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			WAVEFORMATEX* deviceInfo = (WAVEFORMATEX*)varName.blob.pBlobData;
+
+			int bitDepth = deviceInfo->wBitsPerSample;
+
+			// Cleanup
+			deviceInfo = nullptr;
+			PropVariantClear(&varName);
+
+			return bitDepth;
+		}
+
+		/* public */ int AudioDevice::CurrentChannelCount::get() {
+			if (this->State == DeviceState::NotPresent || this->State == DeviceState::Unplugged) {
+				return this->DefaultChannelCount;
+			}
+
+			// Prepare to get value
+			PROPVARIANT varName;
+
+			PropVariantInit(&varName);
+
+			HRESULT hr = this->pProps->GetValue(PKEY_AudioEngine_DeviceFormat, &varName);
+
+			if (FAILED(hr)) {
+				// Cleanup
+				PropVariantClear(&varName);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			WAVEFORMATEX* deviceInfo = (WAVEFORMATEX*)varName.blob.pBlobData;
+
+			int channelCount = deviceInfo->nChannels;
+
+			// Cleanup
+			deviceInfo = nullptr;
+			PropVariantClear(&varName);
+
+			return channelCount;
+		}
+
+		/* public */ int AudioDevice::CurrentSampleRate::get() {
+			if (this->State == DeviceState::NotPresent || this->State == DeviceState::Unplugged) {
+				return this->DefaultSampleRate;
+			}
+
+			// Prepare to get value
+			PROPVARIANT varName;
+
+			PropVariantInit(&varName);
+
+			HRESULT hr = this->pProps->GetValue(PKEY_AudioEngine_DeviceFormat, &varName);
+
+			if (FAILED(hr)) {
+				// Cleanup
+				PropVariantClear(&varName);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			WAVEFORMATEX* deviceInfo = (WAVEFORMATEX*)varName.blob.pBlobData;
+
+			int sampleRate = deviceInfo->nSamplesPerSec;
+
+			// Cleanup
+			deviceInfo = nullptr;
+			PropVariantClear(&varName);
+
+			return sampleRate;
+		}
+
+		/* public */ int AudioDevice::CurrentBitDepth::get() {
+			if (this->State == DeviceState::NotPresent || this->State == DeviceState::Unplugged) {
+				return this->DefaultBitDepth;
+			}
+
+			// Prepare to get value
+			PROPVARIANT varName;
+
+			PropVariantInit(&varName);
+
+			HRESULT hr = this->pProps->GetValue(PKEY_AudioEngine_DeviceFormat, &varName);
+
+			if (FAILED(hr)) {
+				// Cleanup
+				PropVariantClear(&varName);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			WAVEFORMATEX* deviceInfo = (WAVEFORMATEX*)varName.blob.pBlobData;
+
+			int bitDepth = deviceInfo->wBitsPerSample;
+
+			// Cleanup
+			deviceInfo = nullptr;
+			PropVariantClear(&varName);
+
+			return bitDepth;
 		}
 
 		/* public */ bool AudioDevice::Equals(Object^ otherDevice) {

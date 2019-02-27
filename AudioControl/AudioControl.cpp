@@ -1,9 +1,6 @@
 #include "stdafx.h"
 
 #include "AudioControl.h"
-#include "AudioDevice.h"
-#include "Utilities.h"
-#include "CMMNotificationClient.h"
 
 namespace AydenIO {
 	namespace AudioControl {
@@ -169,6 +166,8 @@ namespace AydenIO {
 				pDevice->Release();
 				pDevice = nullptr;
 			}
+
+			return device;
 		}
 	}
 }

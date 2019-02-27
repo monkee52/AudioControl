@@ -1,8 +1,5 @@
 #pragma once
 
-#include "CMMNotificationClient.h"
-#include "AudioDevice.h"
-
 using namespace System;
 using namespace System::Runtime::InteropServices;
 
@@ -27,6 +24,140 @@ namespace AydenIO {
 			Console = eConsole,
 			Multimedia = eMultimedia,
 			Communications = eCommunications
+		};
+
+		private ref class Utilities {
+		public:
+			static String^ ConvertHrToString(HRESULT hr);
+		};
+
+		/// <summary>
+		/// Represents an audio endpoint
+		/// </summary>
+		public ref class AudioDevice : public IDisposable {
+		private:
+			IMMDevice* pDevice;
+			IPropertyStore* pProps;
+
+			String^ _id;
+			DeviceType _type;
+
+
+			~AudioDevice();
+		internal:
+			AudioDevice(IMMDevice* pDevice);
+		public:
+			!AudioDevice();
+
+			/// <summary>
+			/// Gets the system defined identifier for the endpoint
+			/// </summary>
+			property String^ Id {
+				String^ get();
+			}
+
+			/// <summary>
+			/// Gets the current device state
+			/// </summary>
+			property DeviceState State {
+				DeviceState get();
+			}
+
+			/// <summary>
+			/// Gets the current device role
+			/// </summary>
+			property DeviceType Type {
+				DeviceType get();
+			}
+
+			/// <summary>
+			/// Gets the name of the endpoint. e.g. "XYZ Audio Adapter"
+			/// </summary>
+			property String^ Name {
+				String^ get();
+			}
+
+			/// <summary>
+			/// Gets the description of the endpoint. e.g. "Speakers (XYZ Audio Adapter)"
+			/// </summary>
+			property String^ FriendlyName {
+				String^ get();
+			}
+
+			/// <summary>
+			/// Gets the description of the endpoint. e.g. "Speakers"
+			/// </summary>
+			property String^ Description {
+				String^ get();
+			}
+
+			/// <summary>
+			/// Gets the default number of channels
+			/// </summary>
+			property int DefaultChannelCount {
+				int get();
+			}
+
+			/// <summary>
+			/// Gets the default sample rate
+			/// </summary>
+			property int DefaultSampleRate {
+				int get();
+			}
+
+			/// <summary>
+			/// Gets the default bits per sample
+			/// </summary>
+			property int DefaultBitDepth {
+				int get();
+			}
+
+			/// <summary>
+			/// Gets the current number of channels
+			/// </summary>
+			property int CurrentChannelCount {
+				int get();
+			}
+
+			/// <summary>
+			/// Gets the current sample rate
+			/// </summary>
+			property int CurrentSampleRate {
+				int get();
+			}
+
+			/// <summary>
+			/// Gets the current bits per sample
+			/// </summary>
+			property int CurrentBitDepth {
+				int get();
+			}
+
+			virtual bool Equals(Object^ otherDevice) override;
+			virtual bool Equals(AudioDevice^ otherDevice);
+			virtual int GetHashCode() override;
+			static bool operator!= (AudioDevice^ device1, AudioDevice^ device2);
+			static bool operator== (AudioDevice^ device1, AudioDevice^ device2);
+			virtual String^ ToString() override;
+		};
+
+		private class CMMNotificationClient : public IMMNotificationClient {
+		private:
+			LONG _cRef;
+			GCHandle hController;
+		public:
+			CMMNotificationClient(void* pController);
+			~CMMNotificationClient();
+
+			ULONG STDMETHODCALLTYPE AddRef();
+			ULONG STDMETHODCALLTYPE Release();
+			HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, VOID** ppvInterface);
+
+			HRESULT STDMETHODCALLTYPE OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR pwstrDefaultDevice);
+			HRESULT STDMETHODCALLTYPE OnDeviceAdded(LPCWSTR pwstrDeviceId);
+			HRESULT STDMETHODCALLTYPE OnDeviceRemoved(LPCWSTR pwstrDeviceId);
+			HRESULT STDMETHODCALLTYPE OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWORD dwNewState);
+			HRESULT STDMETHODCALLTYPE OnPropertyValueChanged(LPCWSTR pwstrDeviceId, const PROPERTYKEY key);
 		};
 
 		public ref class Controller : public IDisposable {

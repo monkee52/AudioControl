@@ -3,6 +3,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <atlstr.h>
+#include <initguid.h>
 #include <mmdeviceapi.h>
 #include <tchar.h>
 #include <comdef.h>

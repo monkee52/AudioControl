@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "AudioControl.h"
-#include "CMMNotificationClient.h"
 
 namespace AydenIO {
 	namespace AudioControl {

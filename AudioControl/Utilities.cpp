@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "AudioControl.h"
-#include "Utilities.h"
 
 namespace AydenIO {
 	namespace AudioControl {

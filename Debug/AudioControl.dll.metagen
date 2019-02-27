@@ -13,15 +13,31 @@ Class AydenIO.AudioControl.AudioDevice: AutoLayout, AnsiClass, Class, Public, Be
   Interfaces:
     System.IDisposable
   Properties:
+    Int32 CurrentBitDepth 'get ' : 
+    Int32 CurrentSampleRate 'get ' : 
+    Int32 CurrentChannelCount 'get ' : 
+    Int32 DefaultBitDepth 'get ' : 
+    Int32 DefaultSampleRate 'get ' : 
+    Int32 DefaultChannelCount 'get ' : 
     System.String Description 'get ' : 
     System.String FriendlyName 'get ' : 
     System.String Name 'get ' : 
+    AydenIO.AudioControl.DeviceType Type 'get ' : 
+    AydenIO.AudioControl.DeviceState State 'get ' : 
     System.String Id 'get ' : 
   Methods:
     get_Id(): PrivateScope, Public, HideBySig, SpecialName
+    get_State(): PrivateScope, Public, HideBySig, SpecialName
+    get_Type(): PrivateScope, Public, HideBySig, SpecialName
     get_Name(): PrivateScope, Public, HideBySig, SpecialName
     get_FriendlyName(): PrivateScope, Public, HideBySig, SpecialName
     get_Description(): PrivateScope, Public, HideBySig, SpecialName
+    get_DefaultChannelCount(): PrivateScope, Public, HideBySig, SpecialName
+    get_DefaultSampleRate(): PrivateScope, Public, HideBySig, SpecialName
+    get_DefaultBitDepth(): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentChannelCount(): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentSampleRate(): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentBitDepth(): PrivateScope, Public, HideBySig, SpecialName
     Equals(AudioDevice): PrivateScope, Public, Virtual, HideBySig, VtableLayoutMask
     Equals(Object): PrivateScope, Public, Virtual, HideBySig
     GetHashCode(): PrivateScope, Public, Virtual, HideBySig

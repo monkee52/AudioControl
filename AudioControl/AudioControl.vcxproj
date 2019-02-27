@@ -129,11 +129,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AudioControl.h" />
-    <ClInclude Include="AudioDevice.h" />
-    <ClInclude Include="CMMNotificationClient.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="Utilities.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
