@@ -41,9 +41,13 @@ namespace AydenIO {
 
 			String^ _id;
 			DeviceType _type;
-
+			String^ _name;
+			String^ _friendlyName;
+			String^ _description;
 
 			~AudioDevice();
+
+			String^ GetPropertyAsString(const PROPERTYKEY key);
 		internal:
 			AudioDevice(IMMDevice* pDevice);
 		public:
@@ -89,48 +93,6 @@ namespace AydenIO {
 			/// </summary>
 			property String^ Description {
 				String^ get();
-			}
-
-			/// <summary>
-			/// Gets the default number of channels
-			/// </summary>
-			property int DefaultChannelCount {
-				int get();
-			}
-
-			/// <summary>
-			/// Gets the default sample rate
-			/// </summary>
-			property int DefaultSampleRate {
-				int get();
-			}
-
-			/// <summary>
-			/// Gets the default bits per sample
-			/// </summary>
-			property int DefaultBitDepth {
-				int get();
-			}
-
-			/// <summary>
-			/// Gets the current number of channels
-			/// </summary>
-			property int CurrentChannelCount {
-				int get();
-			}
-
-			/// <summary>
-			/// Gets the current sample rate
-			/// </summary>
-			property int CurrentSampleRate {
-				int get();
-			}
-
-			/// <summary>
-			/// Gets the current bits per sample
-			/// </summary>
-			property int CurrentBitDepth {
-				int get();
 			}
 
 			virtual bool Equals(Object^ otherDevice) override;

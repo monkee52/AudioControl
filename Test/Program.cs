@@ -14,15 +14,12 @@ namespace Test {
             AudioDevice[] devices = audioController.GetAudioDevices(DeviceType.All, DeviceState.All);
 
             foreach (AudioDevice device in devices) {
-                Console.WriteLine(device.Id);
-                Console.WriteLine(" - Name:              " + device.Name);
-                Console.WriteLine(" - Friendly Name:     " + device.FriendlyName);
-                Console.WriteLine(" - Description:       " + device.Description);
-                Console.WriteLine(" - State:             " + device.State.ToString());
-                Console.WriteLine(" - Type:              " + device.Type.ToString());
-                Console.WriteLine(" - D/C Channel Count: " + device.DefaultChannelCount + " / " + device.CurrentChannelCount);
-                Console.WriteLine(" - D/C Sample Rate:   " + device.DefaultSampleRate + " / " + device.CurrentSampleRate);
-                Console.WriteLine(" - D/C Bit Depth:     " + device.DefaultBitDepth + " / " + device.CurrentBitDepth);
+                Console.WriteLine("[" + device.Id + "]");
+                Console.WriteLine("Name =          " + device.Name);
+                Console.WriteLine("Friendly Name = " + device.FriendlyName);
+                Console.WriteLine("Description =   " + device.Description);
+                Console.WriteLine("Type =          " + device.Type.ToString());
+                Console.WriteLine("State =         " + device.State.ToString());
                 Console.WriteLine();
             }
 
