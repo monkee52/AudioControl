@@ -3,5 +3,6 @@
   CMMNotificationClient.cpp
   Utilities.cpp
   Generating Code...
+g:\development\audiocontrol\audiocontrol\audiocontrol.cpp(172): warning C4715: 'AydenIO::AudioControl::Controller::GetDefaultAudioDevice': not all control paths return a value
   AssemblyInfo.obj : MSIL module encountered; incremental linking is disabled for MSIL; performing full link
   AudioControl.vcxproj -> G:\Development\AudioControl\Debug\AudioControl.dll

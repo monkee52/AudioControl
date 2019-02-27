@@ -13,7 +13,8 @@ namespace AydenIO {
 			Active = DEVICE_STATE_ACTIVE,
 			Disabled = DEVICE_STATE_DISABLED,
 			NotPresent = DEVICE_STATE_NOTPRESENT,
-			Unplugged = DEVICE_STATE_UNPLUGGED
+			Unplugged = DEVICE_STATE_UNPLUGGED,
+			All = DEVICE_STATEMASK_ALL
 		};
 
 		public enum class DeviceType {
@@ -31,6 +32,7 @@ namespace AydenIO {
 		public ref class Controller : public IDisposable {
 		private:
 			CMMNotificationClient* notificationClient;
+			IMMDeviceEnumerator* deviceEnumerator;
 
 			~Controller();
 		protected:

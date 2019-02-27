@@ -13,23 +13,22 @@ namespace AydenIO {
 		/// <summary>
 		/// Represents an audio endpoint
 		/// </summary>
-		public ref class AudioDevice {
+		public ref class AudioDevice : public IDisposable {
 		private:
-			Controller^ _controller;
-			String^ _id;
+			IMMDevice* pDevice;
+			IPropertyStore* pProps;
 
-			String^ GetPropertyAsString(const PROPERTYKEY key);
+			~AudioDevice();
 		internal:
-			AudioDevice(Controller^ controller, String^ id, bool skipValidCheck);
+			AudioDevice(IMMDevice* pDevice);
 		public:
+			!AudioDevice();
+
 			/// <summary>
 			/// Gets the system defined identifier for the endpoint
 			/// </summary>
 			property String^ Id {
 				String^ get();
-
-			private:
-				void set(String^ id);
 			}
 
 			/// <summary>
@@ -52,6 +51,10 @@ namespace AydenIO {
 			property String^ Description {
 				String^ get();
 			}
+
+			/// <summary>
+			/// Gets the default number of channels
+			/// </summary>
 
 			virtual bool Equals(Object^ otherDevice) override;
 			virtual bool Equals(AudioDevice^ otherDevice);

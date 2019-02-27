@@ -16,13 +16,16 @@ namespace AydenIO {
 			}
 
 			// Get device enumerator
-			CComPtr<IMMDeviceEnumerator> pEnumerator = nullptr;
+			IMMDeviceEnumerator* pEnumerator = nullptr;
 
-			hr = pEnumerator.CoCreateInstance(__uuidof(MMDeviceEnumerator));
+			hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL, IID_PPV_ARGS(&pEnumerator));
 
 			if (FAILED(hr)) {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
+
+			// pEnumerator allocated on stack to avoid memory pinning
+			this->deviceEnumerator = pEnumerator;
 
 			// Get weak handle to this
 			GCHandle hThis = GCHandle::Alloc(this, GCHandleType::Weak);
@@ -30,7 +33,7 @@ namespace AydenIO {
 			// Create notification client and register it
 			this->notificationClient = new CMMNotificationClient(GCHandle::ToIntPtr(hThis).ToPointer());
 
-			hr = pEnumerator->RegisterEndpointNotificationCallback(this->notificationClient);
+			hr = this->deviceEnumerator->RegisterEndpointNotificationCallback(this->notificationClient);
 
 			if (FAILED(hr)) {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
@@ -38,17 +41,8 @@ namespace AydenIO {
 		}
 
 		Controller::~Controller() {
-			// Get device enumerator
-			CComPtr<IMMDeviceEnumerator> pEnumerator = nullptr;
-
-			HRESULT hr = pEnumerator.CoCreateInstance(__uuidof(MMDeviceEnumerator));
-
-			if (FAILED(hr)) {
-				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
-			}
-
 			// Detach notification client
-			hr = pEnumerator->UnregisterEndpointNotificationCallback(this->notificationClient);
+			HRESULT hr = this->deviceEnumerator->UnregisterEndpointNotificationCallback(this->notificationClient);
 
 			if (FAILED(hr)) {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
@@ -57,6 +51,12 @@ namespace AydenIO {
 			// Release ref counted class
 			if (this->notificationClient != nullptr) {
 				this->notificationClient->Release();
+				this->notificationClient = nullptr;
+			}
+
+			if (this->deviceEnumerator != nullptr) {
+				this->deviceEnumerator->Release();
+				this->deviceEnumerator = nullptr;
 			}
 
 			// Cleanup COM
@@ -68,19 +68,10 @@ namespace AydenIO {
 		}
 
 		/* public */ array<AudioDevice^>^ Controller::GetAudioDevices(DeviceType type, DeviceState stateMask) {
-			// Get enumerator
-			CComPtr<IMMDeviceEnumerator> pEnumerator = nullptr;
-
-			HRESULT hr = pEnumerator.CoCreateInstance(__uuidof(MMDeviceEnumerator));
-
-			if (FAILED(hr)) {
-				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
-			}
-
 			// Get all endpoints
-			CComPtr<IMMDeviceCollection> pCollection = nullptr;
+			IMMDeviceCollection* pCollection = nullptr;
 
-			hr = pEnumerator->EnumAudioEndpoints((EDataFlow)type, (DWORD)stateMask, &pCollection);
+			HRESULT hr = this->deviceEnumerator->EnumAudioEndpoints((EDataFlow)type, (DWORD)stateMask, &pCollection);
 
 			if (FAILED(hr)) {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
@@ -92,6 +83,11 @@ namespace AydenIO {
 			hr = pCollection->GetCount(&count);
 
 			if (FAILED(hr)) {
+				if (pCollection != nullptr) {
+					pCollection->Release();
+					pCollection = nullptr;
+				}
+
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
@@ -99,72 +95,80 @@ namespace AydenIO {
 
 			for (UINT i = 0; i < count; i++) {
 				// Get device
-				CComPtr<IMMDevice> pDevice = nullptr;
+				IMMDevice* pDevice = nullptr;
 
 				hr = pCollection->Item(i, &pDevice);
 
 				if (FAILED(hr)) {
+					if (pCollection != nullptr) {
+						pCollection->Release();
+						pCollection = nullptr;
+					}
+
 					throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 				}
 
-				// Get device ID
-				LPWSTR pwszId = nullptr;
+				devices[i] = gcnew AudioDevice(pDevice);
 
-				hr = pDevice->GetId(&pwszId);
-
-				if (FAILED(hr)) {
-					throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+				if (pDevice != nullptr) {
+					pDevice->Release();
+					pDevice = nullptr;
 				}
+			}
 
-				String^ id = gcnew String(pwszId);
-
-				// Cleanup
-				CoTaskMemFree(pwszId);
-
-				devices[i] = gcnew AudioDevice(this, id, true);
+			// Cleanup
+			if (pCollection != nullptr) {
+				pCollection->Release();
+				pCollection = nullptr;
 			}
 
 			return devices;
 		}
 
 		/* public */ AudioDevice^ Controller::GetAudioDevice(String^ id) {
-			return gcnew AudioDevice(this, id, false);
+			// Convert ID to native string
+			IntPtr hId = Marshal::StringToHGlobalAnsi(id);
+			LPWSTR wszId = (LPWSTR)hId.ToPointer();
+
+			// Get device
+			IMMDevice* pDevice = nullptr;
+
+			HRESULT hr = this->deviceEnumerator->GetDevice(wszId, &pDevice);
+
+			// Cleanup native string
+			Marshal::FreeHGlobal(hId);
+			wszId = nullptr;
+
+			if (FAILED(hr)) {
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			AudioDevice^ device = gcnew AudioDevice(pDevice);
+
+			if (pDevice != nullptr) {
+				pDevice->Release();
+				pDevice = nullptr;
+			}
+
+			return device;
 		}
 
 		/* public */ AudioDevice^ Controller::GetDefaultAudioDevice(DeviceType type, DeviceRole role) {
-			// Get device enumerator
-			CComPtr<IMMDeviceEnumerator> pEnumerator = nullptr;
-
-			HRESULT hr = pEnumerator.CoCreateInstance(__uuidof(MMDeviceEnumerator));
-
-			if (FAILED(hr)) {
-				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
-			}
-
 			// Get device
-			CComPtr<IMMDevice> pDevice = nullptr;
+			IMMDevice* pDevice = nullptr;
 
-			hr = pEnumerator->GetDefaultAudioEndpoint((EDataFlow)type, (ERole)role, &pDevice);
-
-			if (FAILED(hr)) {
-				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
-			}
-
-			// Get ID
-			LPWSTR pwszId = nullptr;
-
-			hr = pDevice->GetId(&pwszId);
+			HRESULT hr = this->deviceEnumerator->GetDefaultAudioEndpoint((EDataFlow)type, (ERole)role, &pDevice);
 
 			if (FAILED(hr)) {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
-			String^ id = gcnew String(pwszId);
+			AudioDevice^ device = gcnew AudioDevice(pDevice);
 
-			// Cleanup
-			CoTaskMemFree(pwszId);
-
-			return gcnew AudioDevice(this, id, true);
+			if (pDevice != nullptr) {
+				pDevice->Release();
+				pDevice = nullptr;
+			}
 		}
 	}
 }

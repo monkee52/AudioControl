@@ -10,11 +10,13 @@ Assembly System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e0
 Assembly System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
 	hash=None, flags=None
 Class AydenIO.AudioControl.AudioDevice: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  Interfaces:
+    System.IDisposable
   Properties:
     System.String Description 'get ' : 
     System.String FriendlyName 'get ' : 
     System.String Name 'get ' : 
-    System.String Id 'get set' : 
+    System.String Id 'get ' : 
   Methods:
     get_Id(): PrivateScope, Public, HideBySig, SpecialName
     get_Name(): PrivateScope, Public, HideBySig, SpecialName
@@ -26,6 +28,7 @@ Class AydenIO.AudioControl.AudioDevice: AutoLayout, AnsiClass, Class, Public, Be
     op_Inequality(AudioDevice, AudioDevice): PrivateScope, Public, Static, HideBySig, SpecialName
     op_Equality(AudioDevice, AudioDevice): PrivateScope, Public, Static, HideBySig, SpecialName
     ToString(): PrivateScope, Public, Virtual, HideBySig
+    Dispose(): PrivateScope, Public, Final, Virtual, HideBySig
 Class AydenIO.AudioControl.Controller: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
     Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
   Interfaces:
@@ -43,6 +46,7 @@ Struct AydenIO.AudioControl.DeviceState: AutoLayout, AnsiClass, Class, Public, S
     AydenIO.AudioControl.DeviceState Disabled = 2 : Public, Static, Literal, HasDefault
     AydenIO.AudioControl.DeviceState NotPresent = 4 : Public, Static, Literal, HasDefault
     AydenIO.AudioControl.DeviceState Unplugged = 8 : Public, Static, Literal, HasDefault
+    AydenIO.AudioControl.DeviceState All = 15 : Public, Static, Literal, HasDefault
 Struct AydenIO.AudioControl.DeviceType: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
   :System.Enum
   Fields:

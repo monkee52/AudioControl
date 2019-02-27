@@ -6,52 +6,60 @@
 
 namespace AydenIO {
 	namespace AudioControl {
-		/* private */ String^ AudioDevice::GetPropertyAsString(const PROPERTYKEY key) {
-			// Get device enumerator
-			CComPtr<IMMDeviceEnumerator> pEnumerator = nullptr;
+		/* private */ AudioDevice::AudioDevice(IMMDevice* pDevice) {
+			this->pDevice = pDevice;
+			this->pDevice->AddRef();
 
-			HRESULT hr = pEnumerator.CoCreateInstance(__uuidof(MMDeviceEnumerator));
+			IPropertyStore* pProps = nullptr;
 
-			if (FAILED(hr)) {
-				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
-			}
-
-			// Convert ID to native string
-			IntPtr hId = Marshal::StringToHGlobalUni(this->Id);
-			LPWSTR wszId = (LPWSTR)hId.ToPointer();
-
-			// Get device
-			CComPtr<IMMDevice> pEndpoint = nullptr;
-
-			hr = pEnumerator->GetDevice(wszId, &pEndpoint);
-
-			// Cleanup native string
-			Marshal::FreeHGlobal(hId);
-			wszId = nullptr;
+			HRESULT hr = this->pDevice->OpenPropertyStore(STGM_READ, &pProps);
 
 			if (FAILED(hr)) {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
-			if (pEndpoint == nullptr) {
-				throw gcnew ApplicationException(String::Format(gcnew String(_T("Unable to find device {0}")), this->Id));
+			this->pProps = pProps;
+		}
+
+		/* private */ AudioDevice::~AudioDevice() {
+			if (this->pProps != nullptr) {
+				this->pProps->Release();
+				this->pProps = nullptr;
 			}
 
-			// Get property store
-			CComPtr<IPropertyStore> pProps = nullptr;
+			if (this->pDevice != nullptr) {
+				this->pDevice->Release();
+				this->pDevice = nullptr;
+			}
+		}
 
-			hr = pEndpoint->OpenPropertyStore(STGM_READ, &pProps);
+		/* public */ AudioDevice::!AudioDevice() {
+			delete this;
+		}
+
+		/* public */ String^ AudioDevice::Id::get() {
+			LPWSTR pwszId = nullptr;
+
+			HRESULT hr = this->pDevice->GetId(&pwszId);
 
 			if (FAILED(hr)) {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
+			String^ id = gcnew String(pwszId);
+
+			CoTaskMemFree(pwszId);
+
+			return id;
+		}
+
+		/* public */ String^ AudioDevice::Name::get() {
 			// Prepare to get value
 			PROPVARIANT varName;
 
 			PropVariantInit(&varName);
 
-			hr = pProps->GetValue(key, &varName);
+			HRESULT hr = this->pProps->GetValue(PKEY_DeviceInterface_FriendlyName, &varName);
 
 			if (FAILED(hr)) {
 				// Cleanup
@@ -59,7 +67,7 @@ namespace AydenIO {
 
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
-			
+
 			// Convert to managed and cleanup
 			String^ name = gcnew String(varName.pwszVal);
 
@@ -68,29 +76,50 @@ namespace AydenIO {
 			return name;
 		}
 
-		/* internal */ AudioDevice::AudioDevice(Controller^ controller, String^ id, bool skipCheck) {
-			this->_controller = controller;
-			this->_id = id;
-		}
-
-		/* public */ String^ AudioDevice::Id::get() {
-			return this->_id;
-		}
-
-		/* private */ void AudioDevice::Id::set(String^ id) {
-			this->_id = id;
-		}
-
-		/* public */ String^ AudioDevice::Name::get() {
-			return this->GetPropertyAsString(PKEY_DeviceInterface_FriendlyName);
-		}
-
 		/* public */ String^ AudioDevice::FriendlyName::get() {
-			return this->GetPropertyAsString(PKEY_Device_FriendlyName);
+			// Prepare to get value
+			PROPVARIANT varName;
+
+			PropVariantInit(&varName);
+
+			HRESULT hr = this->pProps->GetValue(PKEY_Device_FriendlyName, &varName);
+
+			if (FAILED(hr)) {
+				// Cleanup
+				PropVariantClear(&varName);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			// Convert to managed and cleanup
+			String^ name = gcnew String(varName.pwszVal);
+
+			PropVariantClear(&varName);
+
+			return name;
 		}
 
 		/* public */ String^ AudioDevice::Description::get() {
-			return this->GetPropertyAsString(PKEY_Device_DeviceDesc);
+			// Prepare to get value
+			PROPVARIANT varName;
+
+			PropVariantInit(&varName);
+
+			HRESULT hr = this->pProps->GetValue(PKEY_Device_DeviceDesc, &varName);
+
+			if (FAILED(hr)) {
+				// Cleanup
+				PropVariantClear(&varName);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			// Convert to managed and cleanup
+			String^ name = gcnew String(varName.pwszVal);
+
+			PropVariantClear(&varName);
+
+			return name;
 		}
 
 		/* public */ bool AudioDevice::Equals(Object^ otherDevice) {
