@@ -20,12 +20,12 @@ namespace AydenIO {
 			this->hController.Free();
 		}
 
-		ULONG CMMNotificationClient::AddRef() {
+		/* public */ ULONG CMMNotificationClient::AddRef() {
 			// Increment internal reference count
 			return InterlockedIncrement(&this->_cRef);
 		}
 
-		ULONG CMMNotificationClient::Release() {
+		/* public */ ULONG CMMNotificationClient::Release() {
 			 // Decrement internal reference count
 			ULONG ulRef = InterlockedDecrement(&this->_cRef);
 
@@ -37,7 +37,7 @@ namespace AydenIO {
 			return ulRef;
 		}
 
-		HRESULT CMMNotificationClient::QueryInterface(REFIID riid, VOID** ppvInterface) {
+		/* public */ HRESULT CMMNotificationClient::QueryInterface(REFIID riid, VOID** ppvInterface) {
 			if (riid == IID_IUnknown) { // All COM classes need to implement IUnknown
 				this->AddRef();
 
@@ -55,31 +55,31 @@ namespace AydenIO {
 			return S_OK;
 		}
 
-		HRESULT CMMNotificationClient::OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR pwstrDefaultDevice) {
+		/* public */ HRESULT CMMNotificationClient::OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR pwstrDefaultDevice) {
 			//((Controller^)this->hController.Target)->
 
 			return S_OK;
 		}
 
-		HRESULT CMMNotificationClient::OnDeviceAdded(LPCWSTR pwstrDeviceId) {
+		/* public */ HRESULT CMMNotificationClient::OnDeviceAdded(LPCWSTR pwstrDeviceId) {
 			//((Controller^)this->hController.Target)->
 
 			return S_OK;
 		}
 
-		HRESULT CMMNotificationClient::OnDeviceRemoved(LPCWSTR pwstrDeviceId) {
+		/* public */ HRESULT CMMNotificationClient::OnDeviceRemoved(LPCWSTR pwstrDeviceId) {
 			//((Controller^)this->hController.Target)->
 
 			return S_OK;
 		}
 
-		HRESULT CMMNotificationClient::OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWORD dwNewState) {
+		/* public */ HRESULT CMMNotificationClient::OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWORD dwNewState) {
 			//((Controller^)this->hController.Target)->
 
 			return S_OK;
 		}
 
-		HRESULT CMMNotificationClient::OnPropertyValueChanged(LPCWSTR pwstrDeviceId, const PROPERTYKEY key) {
+		/* public */ HRESULT CMMNotificationClient::OnPropertyValueChanged(LPCWSTR pwstrDeviceId, const PROPERTYKEY key) {
 			//((Controller^)this->hController.Target)->
 
 			return S_OK;

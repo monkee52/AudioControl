@@ -5,7 +5,7 @@
 
 namespace AydenIO {
 	namespace AudioControl {
-		String^ Utilities::ConvertHrToString(HRESULT hr) {
+		/* public static */ String^ Utilities::ConvertHrToString(HRESULT hr) {
 			// Convert error into string
 			_com_error err(hr);
 
@@ -14,7 +14,7 @@ namespace AydenIO {
 			size_t len = 13 + _tcslen(text); // 13 is the length of the string below when formatted
 			LPTSTR result = new TCHAR[len];
 
-			_sntprintf(result, len, _T("%#010x: %s"), hr, text);
+			_sntprintf_s(result, len, _TRUNCATE, _T("%#010x: %s"), hr, text);
 
 			// Convert to .NET String
 			String^ managedResult = gcnew String(result);

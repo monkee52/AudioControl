@@ -1,5 +1,8 @@
 #pragma once
 
+#include "CMMNotificationClient.h"
+#include "AudioDevice.h"
+
 using namespace System;
 using namespace System::Runtime::InteropServices;
 
@@ -36,12 +39,36 @@ namespace AydenIO {
 			Controller();
 			!Controller();
 
+			/// <summary>
+			/// Gets all the render audio endpoints currently enabled on the system
+			/// </summary>
+			/// <returns>The endpoints</returns>
 			array<AudioDevice^>^ GetAudioDevices(DeviceType type, DeviceState stateMask);
-
+			
+			/// <summary>
+			/// Gets an audio endpoint by id
+			/// </summary>
+			/// <param name="id">The endpoint id</param>
+			/// <returns>The endpoint</returns>
 			AudioDevice^ GetAudioDevice(String^ id);
+			
+			/// <summary>
+			/// Gets the current default render endpoint
+			/// </summary>
+			/// <returns>The endpoint</returns>
 			AudioDevice^ GetDefaultAudioDevice(DeviceType type, DeviceRole role);
-			void SetDefaultAudioDevice(AudioDevice^ device, DeviceRole role);
-			void SetDefaultAudioDevice(String^ deviceId, DeviceRole role);
+			
+			/// <summary>
+			/// Sets the default render endpoint
+			/// </summary>
+			/// <param name="endpoint">The endpoint</param>
+			//void SetDefaultAudioDevice(AudioDevice^ device, DeviceRole role);
+			
+			/// <summary>
+			/// Sets the default render endpoint
+			/// </summary>
+			/// <param name="endpoint">The endpoint</param>
+			//void SetDefaultAudioDevice(String^ deviceId, DeviceRole role);
 		};
 	}
 }
