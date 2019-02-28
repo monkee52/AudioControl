@@ -21,14 +21,57 @@ namespace AydenIO {
 		};
 
 		public enum class DeviceRole {
-			Console = eConsole,
-			Multimedia = eMultimedia,
-			Communications = eCommunications
+			Console = eConsole, // Games, system notification sounds, and voice commands.
+			Multimedia = eMultimedia, // Music, movies, narration, and live music recording.
+			Communications = eCommunications // Voice communications (talking to another person).
 		};
 
 		private ref class Utilities {
 		public:
 			static String^ ConvertHrToString(HRESULT hr);
+			static Guid ConvertNativeGuidToGuid(const GUID g);
+		};
+
+		public ref class MuteStatusChangedEventArgs : public EventArgs {
+		private:
+			Guid _evContext;
+			bool _previousMuteStatus;
+			bool _muteStatus;
+		internal:
+			MuteStatusChangedEventArgs(Guid evContext, bool oldMuteStatus, bool newMuteStatus);
+		public:
+			property Guid Context {
+				Guid get();
+			}
+
+			property bool PreviousMuteStatus {
+				bool get();
+			}
+
+			property bool MuteStatus {
+				bool get();
+			}
+		};
+
+		public ref class VolumeChangedEventArgs : public EventArgs {
+		private:
+			Guid _evContext;
+			float _previousVolume;
+			float _volume;
+		internal:
+			VolumeChangedEventArgs(Guid evContext, float oldVolume, float newVolume);
+		public:
+			property Guid Context {
+				Guid get();
+			}
+
+			property float PreviousVolume {
+				float get();
+			}
+
+			property float Volume {
+				float get();
+			}
 		};
 
 		/// <summary>
@@ -38,6 +81,9 @@ namespace AydenIO {
 		private:
 			IMMDevice* pDevice;
 			IPropertyStore* pProps;
+			IAudioEndpointVolume* pVolume;
+
+			IAudioEndpointVolumeCallback* volumeCallback;
 
 			String^ _id;
 			DeviceType _type;
@@ -50,8 +96,14 @@ namespace AydenIO {
 			String^ GetPropertyAsString(const PROPERTYKEY key);
 		internal:
 			AudioDevice(IMMDevice* pDevice);
+
+			void OnMuteStatusChanged(MuteStatusChangedEventArgs^ e);
+			void OnMasterVolumeChanged(VolumeChangedEventArgs^ e);
 		public:
 			!AudioDevice();
+
+			event EventHandler<MuteStatusChangedEventArgs^>^ MuteStatusChanged;
+			event EventHandler<VolumeChangedEventArgs^>^ MasterVolumeChanged;
 
 			/// <summary>
 			/// Gets the system defined identifier for the endpoint
@@ -95,6 +147,23 @@ namespace AydenIO {
 				String^ get();
 			}
 
+			property bool IsMuted {
+				/// <summary>
+				/// Returns whether the device is muted.
+				/// </summary>
+				bool get();
+			}
+
+			/// <summary>
+			/// Mutes the device
+			/// </summary>
+			void Mute();
+
+			/// <summary>
+			/// Unmutes the device
+			/// </summary>
+			void Unmute();
+
 			virtual bool Equals(Object^ otherDevice) override;
 			virtual bool Equals(AudioDevice^ otherDevice);
 			virtual int GetHashCode() override;
@@ -122,9 +191,27 @@ namespace AydenIO {
 			HRESULT STDMETHODCALLTYPE OnPropertyValueChanged(LPCWSTR pwstrDeviceId, const PROPERTYKEY key);
 		};
 
+		private class CAudioEndpointVolumeCallback : public IAudioEndpointVolumeCallback {
+		private:
+			LONG _cRef;
+			GCHandle hDevice;
+
+			BOOL bCurrMuted;
+			float fCurrMasterVolume;
+		public:
+			CAudioEndpointVolumeCallback(void* pDevice);
+			~CAudioEndpointVolumeCallback();
+
+			ULONG STDMETHODCALLTYPE AddRef();
+			ULONG STDMETHODCALLTYPE Release();
+			HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, VOID** ppvInterface);
+
+			HRESULT STDMETHODCALLTYPE OnNotify(PAUDIO_VOLUME_NOTIFICATION_DATA pNotify)
+		};
+
 		public ref class Controller : public IDisposable {
 		private:
-			CMMNotificationClient* notificationClient;
+			IMMNotificationClient* notificationClient;
 			IMMDeviceEnumerator* deviceEnumerator;
 
 			~Controller();

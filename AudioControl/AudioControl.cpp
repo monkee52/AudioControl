@@ -18,6 +18,9 @@ namespace AydenIO {
 			hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL, IID_PPV_ARGS(&pEnumerator));
 
 			if (FAILED(hr)) {
+				// Cleanup
+				CoUninitialize();
+
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
@@ -33,16 +36,24 @@ namespace AydenIO {
 			hr = this->deviceEnumerator->RegisterEndpointNotificationCallback(this->notificationClient);
 
 			if (FAILED(hr)) {
+				// Cleanup
+				this->deviceEnumerator->Release();
+				this->deviceEnumerator = nullptr;
+				
+				CoUninitialize();
+
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 		}
 
 		Controller::~Controller() {
 			// Detach notification client
-			HRESULT hr = this->deviceEnumerator->UnregisterEndpointNotificationCallback(this->notificationClient);
+			if (this->notificationClient != nullptr) {
+				// Ignore only possible error codes E_POINTER and E_NOTFOUND
+				this->deviceEnumerator->UnregisterEndpointNotificationCallback(this->notificationClient);
 
-			if (FAILED(hr)) {
-				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+				this->notificationClient->Release();
+				this->notificationClient = nullptr;
 			}
 
 			// Release ref counted class

@@ -23,5 +23,9 @@ namespace AydenIO {
 
 			return managedResult;
 		}
+
+		/* public static */ Guid Utilities::ConvertNativeGuidToGuid(const GUID g) {
+			return Guid(g.Data1, g.Data2, g.Data3, g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
+		}
 	}
 }

@@ -20,6 +20,7 @@ namespace AydenIO {
 			String^ id = gcnew String(pwszId);
 
 			CoTaskMemFree(pwszId);
+			pwszId = nullptr;
 
 			this->_id = id;
 
@@ -29,19 +30,30 @@ namespace AydenIO {
 			hr = this->pDevice->QueryInterface(__uuidof(IMMEndpoint), (void**)&pEndpoint);
 
 			if (FAILED(hr)) {
+				// Cleanup - destructor not called if exception thrown in constructor
+				if (this->pDevice != nullptr) {
+					this->pDevice->Release();
+					this->pDevice = nullptr;
+				}
+
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
-			// Cache role
+			// Cache type
 			EDataFlow eFlow;
 
 			hr = pEndpoint->GetDataFlow(&eFlow);
 
 			if (FAILED(hr)) {
-				// Cleanup
+				// Cleanup - destructor not called if exception thrown in constructor
 				if (pEndpoint != nullptr) {
 					pEndpoint->Release();
 					pEndpoint = nullptr;
+				}
+
+				if (this->pDevice != nullptr) {
+					this->pDevice->Release();
+					this->pDevice = nullptr;
 				}
 
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
@@ -61,18 +73,102 @@ namespace AydenIO {
 			hr = this->pDevice->OpenPropertyStore(STGM_READ, &pProps);
 
 			if (FAILED(hr)) {
+				// Cleanup - destructor not called if exception thrown in constructor
+				if (this->pDevice != nullptr) {
+					this->pDevice->Release();
+					this->pDevice = nullptr;
+				}
+
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
 			this->pProps = pProps;
 
 			// Cache properties
-			this->_name = this->GetPropertyAsString(PKEY_DeviceInterface_FriendlyName);
-			this->_friendlyName = this->GetPropertyAsString(PKEY_Device_FriendlyName);
-			this->_description = this->GetPropertyAsString(PKEY_Device_DeviceDesc);
+			try {
+				this->_name = this->GetPropertyAsString(PKEY_DeviceInterface_FriendlyName);
+				this->_friendlyName = this->GetPropertyAsString(PKEY_Device_FriendlyName);
+				this->_description = this->GetPropertyAsString(PKEY_Device_DeviceDesc);
+			} catch (Exception^ e) {
+				// Cleanup - destructor not called if exception thrown in constructor
+				if (this->pProps != nullptr) {
+					this->pProps->Release();
+					this->pProps = nullptr;
+				}
+
+				if (this->pDevice != nullptr) {
+					this->pDevice->Release();
+					this->pDevice = nullptr;
+				}
+
+				throw e;
+			}
+			
+			// Init volume control
+			IAudioEndpointVolume* pVolume = nullptr;
+
+			hr = this->pDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_ALL, NULL, (void**)&pVolume);
+
+			if (FAILED(hr)) {
+				// Cleanup - destructor not called if exception thrown in constructor
+				if (this->pProps != nullptr) {
+					this->pProps->Release();
+					this->pProps = nullptr;
+				}
+
+				if (this->pDevice != nullptr) {
+					this->pDevice->Release();
+					this->pDevice = nullptr;
+				}
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			this->pVolume = pVolume;
+
+			// Get weak handle to this
+			GCHandle hThis = GCHandle::Alloc(this, GCHandleType::Weak);
+
+			this->volumeCallback = new CAudioEndpointVolumeCallback(GCHandle::ToIntPtr(hThis).ToPointer());;
+
+			hr = this->pVolume->RegisterControlChangeNotify(this->volumeCallback);
+
+			if (FAILED(hr)) {
+				// Cleanup - destructor not called if exception thrown in constructor
+				if (this->pVolume != nullptr) {
+					this->pVolume->Release();
+					this->pVolume = nullptr;
+				}
+
+				if (this->pProps != nullptr) {
+					this->pProps->Release();
+					this->pProps = nullptr;
+				}
+
+				if (this->pDevice != nullptr) {
+					this->pDevice->Release();
+					this->pDevice = nullptr;
+				}
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
 		}
 
 		/* private */ AudioDevice::~AudioDevice() {
+			// Detach volume callback
+			if (this->volumeCallback != nullptr) {
+				// Ignore only possible error code E_POINTER
+				this->pVolume->UnregisterControlChangeNotify(this->volumeCallback);
+
+				this->volumeCallback->Release();
+				this->volumeCallback = nullptr;
+			}
+
+			if (this->pVolume != nullptr) {
+				this->pVolume->Release();
+				this->pVolume = nullptr;
+			}
+
 			if (this->pProps != nullptr) {
 				this->pProps->Release();
 				this->pProps = nullptr;
@@ -143,6 +239,38 @@ namespace AydenIO {
 			return this->_description;
 		}
 
+		/* public */ bool AudioDevice::IsMuted::get() {
+			if (this->pVolume == nullptr) {
+				return false;
+			}
+
+			BOOL bMuted = false;
+
+			HRESULT hr = this->pVolume->GetMute(&bMuted);
+
+			if (FAILED(hr)) {
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			return (bool)bMuted;
+		}
+
+		/* public */ void AudioDevice::Mute() {
+			HRESULT hr = this->pVolume->SetMute(TRUE, NULL);
+
+			if (FAILED(hr)) {
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+		}
+
+		/* public */ void AudioDevice::Unmute() {
+			HRESULT hr = this->pVolume->SetMute(FALSE, NULL);
+
+			if (FAILED(hr)) {
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+		}
+
 		/* public */ bool AudioDevice::Equals(Object^ otherDevice) {
 			if (otherDevice == nullptr) {
 				return false;
@@ -183,6 +311,14 @@ namespace AydenIO {
 
 		/* public */ String^ AudioDevice::ToString() {
 			return String::Format(gcnew String(_T("<#Device({0})>")), this->Id);
+		}
+
+		/* internal */ void AudioDevice::OnMuteStatusChanged(MuteStatusChangedEventArgs^ e) {
+			this->MuteStatusChanged(this, e);
+		}
+
+		/* internal */ void AudioDevice::OnMasterVolumeChanged(VolumeChangedEventArgs^ e) {
+			this->MasterVolumeChanged(this, e);
 		}
 	}
 }

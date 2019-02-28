@@ -20,7 +20,9 @@ namespace Test {
                 Console.WriteLine("Description =   " + device.Description);
                 Console.WriteLine("Type =          " + device.Type.ToString());
                 Console.WriteLine("State =         " + device.State.ToString());
+                Console.WriteLine("Mute =          " + device.IsMuted.ToString());
                 Console.WriteLine();
+                Console.Out.Flush();
             }
 
             Pause();
@@ -28,6 +30,7 @@ namespace Test {
 
         static void Pause() {
             Console.Write("Press any key to continue...");
+            Console.Out.Flush();
             Console.ReadKey(true);
             Console.WriteLine();
         }

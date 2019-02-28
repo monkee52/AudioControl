@@ -4,7 +4,7 @@
 
 namespace AydenIO {
 	namespace AudioControl {
-		CMMNotificationClient::CMMNotificationClient(void* pController) {
+		/* public */CMMNotificationClient::CMMNotificationClient(void* pController) {
 			this->_cRef = 1;
 
 			// Get reference back to managed Controller
@@ -14,7 +14,7 @@ namespace AydenIO {
 			this->hController = hController;
 		}
 
-		CMMNotificationClient::~CMMNotificationClient() {
+		/* public */CMMNotificationClient::~CMMNotificationClient() {
 			// Free weak GCHandle when this class is no longer needed
 			this->hController.Free();
 		}
