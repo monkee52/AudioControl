@@ -73,7 +73,11 @@ namespace AydenIO {
 		}
 
 		/* public */ HRESULT CMMNotificationClient::OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWORD dwNewState) {
-			//((Controller^)this->hController.Target)->
+			Controller^ controller = (Controller^)this->hController.Target;
+
+			if (controller != nullptr) {
+				controller->OnDeviceStateChanged(gcnew String(pwstrDeviceId), (DeviceState)dwNewState);
+			}
 
 			return S_OK;
 		}

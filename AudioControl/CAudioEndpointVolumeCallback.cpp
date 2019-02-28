@@ -66,9 +66,9 @@ namespace AydenIO {
 			Guid guidEventContext = Utilities::ConvertNativeGuidToGuid(pNotify->guidEventContext);
 
 			// Handle mute status changes
-			if (pNotify->bMuted != this->bCurrMuted) {
+			if ((bool)pNotify->bMuted != this->bCurrMuted) {
 				if (controller != nullptr) {
-					MuteStatusChangedEventArgs^ args = gcnew MuteStatusChangedEventArgs(guidEventContext, this->bCurrMuted, pNotify->bMuted);
+					MuteStatusChangedEventArgs^ args = gcnew MuteStatusChangedEventArgs(guidEventContext, this->bCurrMuted, (bool)pNotify->bMuted);
 
 					controller->OnMuteStatusChanged(args);
 				}

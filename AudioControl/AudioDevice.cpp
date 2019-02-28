@@ -67,6 +67,23 @@ namespace AydenIO {
 
 			this->_type = (DeviceType)eFlow;
 
+			// Cache state
+			DWORD dwState = 0;
+
+			hr = this->pDevice->GetState(&dwState);
+
+			if (FAILED(hr)) {
+				// Cleanup - destructor not called if exception thrown in constructor
+				if (this->pDevice != nullptr) {
+					this->pDevice->Release();
+					this->pDevice = nullptr;
+				}
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			this->_currState = (DeviceState)dwState;
+
 			// Init properties
 			IPropertyStore* pProps = nullptr;
 
@@ -212,15 +229,7 @@ namespace AydenIO {
 		}
 
 		/* public */ DeviceState AudioDevice::State::get() {
-			DWORD dwState = 0;
-
-			HRESULT hr = this->pDevice->GetState(&dwState);
-
-			if (FAILED(hr)) {
-				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
-			}
-
-			return (DeviceState)dwState;
+			return this->_currState;
 		}
 
 		/* public */ DeviceType AudioDevice::Type::get() {
@@ -319,6 +328,15 @@ namespace AydenIO {
 
 		/* internal */ void AudioDevice::OnMasterVolumeChanged(VolumeChangedEventArgs^ e) {
 			this->MasterVolumeChanged(this, e);
+		}
+
+		/* internal */ void AudioDevice::OnDeviceStateChanged(DeviceStateChangedEventArgs^ e) {
+			// DeviceStateChanged is a controller-wide event, verify that this is the targeted device
+			if (e->DeviceId == this->Id) {
+				e->PreviousState = this->_currState;
+
+				this->StateChanged(this, e);
+			}
 		}
 	}
 }

@@ -74,6 +74,30 @@ namespace AydenIO {
 			}
 		};
 
+		public ref class DeviceStateChangedEventArgs : public EventArgs {
+		private:
+			String^ _deviceId;
+			DeviceState _previousState;
+			DeviceState _state;
+		internal:
+			DeviceStateChangedEventArgs(String^ id, DeviceState newState);
+
+			property String^ DeviceId {
+				String^ get();
+			}
+		public:
+			property DeviceState PreviousState {
+				DeviceState get();
+
+			internal:
+				void set(DeviceState oldState);
+			}
+
+			property DeviceState State {
+				DeviceState get();
+			}
+		};
+
 		/// <summary>
 		/// Represents an audio endpoint
 		/// </summary>
@@ -84,6 +108,7 @@ namespace AydenIO {
 			IAudioEndpointVolume* pVolume;
 
 			IAudioEndpointVolumeCallback* volumeCallback;
+			DeviceState _currState;
 
 			String^ _id;
 			DeviceType _type;
@@ -99,11 +124,13 @@ namespace AydenIO {
 
 			void OnMuteStatusChanged(MuteStatusChangedEventArgs^ e);
 			void OnMasterVolumeChanged(VolumeChangedEventArgs^ e);
+			void OnDeviceStateChanged(DeviceStateChangedEventArgs^ e);
 		public:
 			!AudioDevice();
 
 			event EventHandler<MuteStatusChangedEventArgs^>^ MuteStatusChanged;
 			event EventHandler<VolumeChangedEventArgs^>^ MasterVolumeChanged;
+			event EventHandler<DeviceStateChangedEventArgs^>^ StateChanged;
 
 			/// <summary>
 			/// Gets the system defined identifier for the endpoint
@@ -196,7 +223,7 @@ namespace AydenIO {
 			LONG _cRef;
 			GCHandle hDevice;
 
-			BOOL bCurrMuted;
+			bool bCurrMuted;
 			float fCurrMasterVolume;
 		public:
 			CAudioEndpointVolumeCallback(void* pDevice);
@@ -206,7 +233,7 @@ namespace AydenIO {
 			ULONG STDMETHODCALLTYPE Release();
 			HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, VOID** ppvInterface);
 
-			HRESULT STDMETHODCALLTYPE OnNotify(PAUDIO_VOLUME_NOTIFICATION_DATA pNotify)
+			HRESULT STDMETHODCALLTYPE OnNotify(PAUDIO_VOLUME_NOTIFICATION_DATA pNotify);
 		};
 
 		public ref class Controller : public IDisposable {
@@ -215,8 +242,9 @@ namespace AydenIO {
 			IMMDeviceEnumerator* deviceEnumerator;
 
 			~Controller();
-		protected:
-
+		internal:
+			event EventHandler<DeviceStateChangedEventArgs^>^ DeviceStateChanged;
+			void OnDeviceStateChanged(String^ deviceId, DeviceState newState);
 		public:
 			Controller();
 			!Controller();

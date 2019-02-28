@@ -180,5 +180,9 @@ namespace AydenIO {
 
 			return device;
 		}
+
+		/* internal */ void Controller::OnDeviceStateChanged(String^ deviceId, DeviceState newState) {
+			this->DeviceStateChanged(this, gcnew DeviceStateChangedEventArgs(deviceId, newState));
+		}
 	}
 }
