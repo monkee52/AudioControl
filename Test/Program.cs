@@ -11,7 +11,7 @@ namespace Test {
         static void Main(string[] args) {
             Controller audioController = new Controller();
 
-            AudioDevice[] devices = audioController.GetAudioDevices(DeviceType.All, DeviceState.All);
+            AudioDevice[] devices = audioController.GetAudioDevices(DeviceType.Render, DeviceState.Active);
 
             foreach (AudioDevice device in devices) {
                 Console.WriteLine("[" + device.Id + "]");
@@ -21,17 +21,41 @@ namespace Test {
                 Console.WriteLine("Type =          " + device.Type.ToString());
                 Console.WriteLine("State =         " + device.State.ToString());
                 Console.WriteLine("Mute =          " + device.IsMuted.ToString());
+                Console.WriteLine("Volume =        " + String.Format("{0:0.00}", device.MasterVolume * 100.0));
                 Console.WriteLine();
                 Console.Out.Flush();
+
+                device.MasterVolumeChanged += Device_MasterVolumeChanged;
+                device.MuteStatusChanged += Device_MuteStatusChanged;
             }
 
             Pause();
         }
 
+        private static void Device_MuteStatusChanged(object sender, MuteStatusChangedEventArgs e) {
+            AudioDevice device = sender as AudioDevice;
+
+            if (device != null) {
+                Console.WriteLine("{0} {1}.", device.ToString(), e.MuteStatus ? "muted" : "unmuted");
+            }
+        }
+
+        private static void Device_MasterVolumeChanged(object sender, VolumeChangedEventArgs e) {
+            AudioDevice device = sender as AudioDevice;
+
+            if (device != null) {
+                Console.WriteLine("{0} volume changed from {1:0.00} to {2:0.00}.", device.ToString(), e.PreviousVolume * 100.0, e.Volume * 100.0);
+            }
+        }
+
         static void Pause() {
-            Console.Write("Press any key to continue...");
+            Console.Write("Press enter to continue...");
             Console.Out.Flush();
-            Console.ReadKey(true);
+            
+            while (Console.ReadKey(true).Key != ConsoleKey.Enter) {
+
+            }
+
             Console.WriteLine();
         }
     }

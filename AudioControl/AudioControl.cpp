@@ -116,7 +116,7 @@ namespace AydenIO {
 					throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 				}
 
-				devices[i] = gcnew AudioDevice(pDevice);
+				devices[i] = gcnew AudioDevice(this, pDevice);
 
 				if (pDevice != nullptr) {
 					pDevice->Release();
@@ -151,7 +151,7 @@ namespace AydenIO {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
-			AudioDevice^ device = gcnew AudioDevice(pDevice);
+			AudioDevice^ device = gcnew AudioDevice(this, pDevice);
 
 			if (pDevice != nullptr) {
 				pDevice->Release();
@@ -171,7 +171,7 @@ namespace AydenIO {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
-			AudioDevice^ device = gcnew AudioDevice(pDevice);
+			AudioDevice^ device = gcnew AudioDevice(this, pDevice);
 
 			if (pDevice != nullptr) {
 				pDevice->Release();

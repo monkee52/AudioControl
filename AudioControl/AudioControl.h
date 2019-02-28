@@ -26,6 +26,8 @@ namespace AydenIO {
 			Communications = eCommunications // Voice communications (talking to another person).
 		};
 
+		ref class Controller;
+
 		private ref class Utilities {
 		public:
 			static String^ ConvertHrToString(HRESULT hr);
@@ -103,12 +105,16 @@ namespace AydenIO {
 		/// </summary>
 		public ref class AudioDevice : public IDisposable {
 		private:
+			Controller^ controller;
+
 			IMMDevice* pDevice;
 			IPropertyStore* pProps;
 			IAudioEndpointVolume* pVolume;
 
 			IAudioEndpointVolumeCallback* volumeCallback;
 			DeviceState _currState;
+			bool _currMuteStatus;
+			float _currMasterVolume;
 
 			String^ _id;
 			DeviceType _type;
@@ -119,12 +125,15 @@ namespace AydenIO {
 			~AudioDevice();
 
 			String^ GetPropertyAsString(const PROPERTYKEY key);
+			void Cleanup();
 		internal:
-			AudioDevice(IMMDevice* pDevice);
+			AudioDevice(Controller^ controller, IMMDevice* pDevice);
 
-			void OnMuteStatusChanged(MuteStatusChangedEventArgs^ e);
-			void OnMasterVolumeChanged(VolumeChangedEventArgs^ e);
+			void OnMuteStatusChanged(Guid evContext, bool newMuteStatus);
+			void OnMasterVolumeChanged(Guid evContext, float newMasterVolume);
+
 			void OnDeviceStateChanged(DeviceStateChangedEventArgs^ e);
+			void OnDeviceStateChanged(Object^ sender, DeviceStateChangedEventArgs^ e);
 		public:
 			!AudioDevice();
 
@@ -191,6 +200,13 @@ namespace AydenIO {
 			/// </summary>
 			void Unmute();
 
+			property float MasterVolume {
+				/// <summary>
+				/// Returns the current master volume
+				/// </summary>
+				float get();
+			}
+
 			virtual bool Equals(Object^ otherDevice) override;
 			virtual bool Equals(AudioDevice^ otherDevice);
 			virtual int GetHashCode() override;
@@ -222,9 +238,6 @@ namespace AydenIO {
 		private:
 			LONG _cRef;
 			GCHandle hDevice;
-
-			bool bCurrMuted;
-			float fCurrMasterVolume;
 		public:
 			CAudioEndpointVolumeCallback(void* pDevice);
 			~CAudioEndpointVolumeCallback();

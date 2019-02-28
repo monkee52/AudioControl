@@ -9,12 +9,9 @@ namespace AydenIO {
 
 			// Get reference back to managed device
 			IntPtr mpDevice(pDevice);
-			GCHandle hController = GCHandle::FromIntPtr(mpDevice);
+			GCHandle hDevice = GCHandle::FromIntPtr(mpDevice);
 
 			this->hDevice = hDevice;
-
-			this->bCurrMuted = ((AudioDevice^)this->hDevice.Target)->IsMuted;
-			//this->fCurrMasterVolume = ((AudioDevice^)this->hDevice.Target)->MasterVolume;
 		}
 
 		/* public */ CAudioEndpointVolumeCallback::~CAudioEndpointVolumeCallback() {
@@ -62,29 +59,12 @@ namespace AydenIO {
 				return E_INVALIDARG;
 			}
 
-			AudioDevice^ controller = (AudioDevice^)this->hDevice.Target;
-			Guid guidEventContext = Utilities::ConvertNativeGuidToGuid(pNotify->guidEventContext);
+			AudioDevice^ device = (AudioDevice^)this->hDevice.Target;
+			Guid evContext = Utilities::ConvertNativeGuidToGuid(pNotify->guidEventContext);
 
-			// Handle mute status changes
-			if ((bool)pNotify->bMuted != this->bCurrMuted) {
-				if (controller != nullptr) {
-					MuteStatusChangedEventArgs^ args = gcnew MuteStatusChangedEventArgs(guidEventContext, this->bCurrMuted, (bool)pNotify->bMuted);
-
-					controller->OnMuteStatusChanged(args);
-				}
-
-				this->bCurrMuted = pNotify->bMuted;
-			}
-
-			// Handle master volume changes
-			if (pNotify->fMasterVolume != this->fCurrMasterVolume) {
-				if (controller != nullptr) {
-					VolumeChangedEventArgs^ args = gcnew VolumeChangedEventArgs(guidEventContext, this->fCurrMasterVolume, pNotify->fMasterVolume);
-
-					controller->OnMasterVolumeChanged(args);
-				}
-
-				this->fCurrMasterVolume = pNotify->fMasterVolume;
+			if (device != nullptr) {
+				device->OnMuteStatusChanged(evContext, (bool)pNotify->bMuted);
+				device->OnMasterVolumeChanged(evContext, pNotify->fMasterVolume);
 			}
 
 			return S_OK;
