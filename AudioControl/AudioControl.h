@@ -205,6 +205,11 @@ namespace AydenIO {
 				/// Returns the current master volume
 				/// </summary>
 				float get();
+				
+				/// <summary>
+				/// Sets the current master volume
+				/// </summary>
+				void set(float newVolume);
 			}
 
 			virtual bool Equals(Object^ otherDevice) override;
@@ -213,6 +218,17 @@ namespace AydenIO {
 			static bool operator!= (AudioDevice^ device1, AudioDevice^ device2);
 			static bool operator== (AudioDevice^ device1, AudioDevice^ device2);
 			virtual String^ ToString() override;
+		};
+
+		public ref class DeviceEventArgs : public EventArgs {
+		private:
+			AudioDevice^ _device;
+		internal:
+			DeviceEventArgs(AudioDevice^ device);
+		public:
+			property AudioDevice^ Device {
+				AudioDevice^ get();
+			}
 		};
 
 		private class CMMNotificationClient : public IMMNotificationClient {
@@ -258,7 +274,13 @@ namespace AydenIO {
 		internal:
 			event EventHandler<DeviceStateChangedEventArgs^>^ DeviceStateChanged;
 			void OnDeviceStateChanged(String^ deviceId, DeviceState newState);
+
+			void OnDeviceAdded(String^ deviceId);
+			void OnDeviceRemoved(String^ deviceId);
 		public:
+			event EventHandler<DeviceEventArgs^>^ DeviceAdded;
+			event EventHandler<DeviceEventArgs^>^ DeviceRemoved;
+
 			Controller();
 			!Controller();
 

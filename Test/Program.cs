@@ -33,17 +33,13 @@ namespace Test {
         }
 
         private static void Device_MuteStatusChanged(object sender, MuteStatusChangedEventArgs e) {
-            AudioDevice device = sender as AudioDevice;
-
-            if (device != null) {
+            if (sender is AudioDevice device) {
                 Console.WriteLine("{0} {1}.", device.ToString(), e.MuteStatus ? "muted" : "unmuted");
             }
         }
 
         private static void Device_MasterVolumeChanged(object sender, VolumeChangedEventArgs e) {
-            AudioDevice device = sender as AudioDevice;
-
-            if (device != null) {
+            if (sender is AudioDevice device) {
                 Console.WriteLine("{0} volume changed from {1:0.00} to {2:0.00}.", device.ToString(), e.PreviousVolume * 100.0, e.Volume * 100.0);
             }
         }

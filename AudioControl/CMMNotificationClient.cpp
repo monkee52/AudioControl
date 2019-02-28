@@ -61,13 +61,21 @@ namespace AydenIO {
 		}
 
 		/* public */ HRESULT CMMNotificationClient::OnDeviceAdded(LPCWSTR pwstrDeviceId) {
-			//((Controller^)this->hController.Target)->
+			Controller^ controller = (Controller^)this->hController.Target;
+
+			if (controller != nullptr) {
+				controller->OnDeviceAdded(gcnew String(pwstrDeviceId));
+			}
 
 			return S_OK;
 		}
 
 		/* public */ HRESULT CMMNotificationClient::OnDeviceRemoved(LPCWSTR pwstrDeviceId) {
-			//((Controller^)this->hController.Target)->
+			Controller^ controller = (Controller^)this->hController.Target;
+
+			if (controller != nullptr) {
+				controller->OnDeviceRemoved(gcnew String(pwstrDeviceId));
+			}
 
 			return S_OK;
 		}
@@ -83,7 +91,11 @@ namespace AydenIO {
 		}
 
 		/* public */ HRESULT CMMNotificationClient::OnPropertyValueChanged(LPCWSTR pwstrDeviceId, const PROPERTYKEY key) {
-			//((Controller^)this->hController.Target)->
+			Controller^ controller = (Controller^)this->hController.Target;
+
+			if (controller != nullptr) {
+				//controller->OnPropertyValueChanged(gcnew String(pwstrDeviceId), key);
+			}
 
 			return S_OK;
 		}

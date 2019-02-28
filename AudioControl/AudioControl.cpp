@@ -184,5 +184,13 @@ namespace AydenIO {
 		/* internal */ void Controller::OnDeviceStateChanged(String^ deviceId, DeviceState newState) {
 			this->DeviceStateChanged(this, gcnew DeviceStateChangedEventArgs(deviceId, newState));
 		}
+
+		/* internal */ void Controller::OnDeviceAdded(String^ deviceId) {
+			this->DeviceAdded(this, gcnew DeviceEventArgs(this->GetAudioDevice(deviceId)));
+		}
+
+		/* internal */ void Controller::OnDeviceRemoved(String^ deviceId) {
+			this->DeviceRemoved(this, gcnew DeviceEventArgs(this->GetAudioDevice(deviceId)));
+		}
 	}
 }

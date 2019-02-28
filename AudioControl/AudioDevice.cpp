@@ -268,6 +268,16 @@ namespace AydenIO {
 			return this->_currMasterVolume;
 		}
 
+		/* public */ void AudioDevice::MasterVolume::set(float newVolume) {
+			newVolume = Math::Min(1.0f, Math::Max(0.0f, newVolume));
+
+			HRESULT hr = this->pVolume->SetMasterVolumeLevelScalar(newVolume, NULL);
+
+			if (FAILED(hr)) {
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+		}
+
 		/* public */ bool AudioDevice::Equals(Object^ otherDevice) {
 			if (otherDevice == nullptr) {
 				return false;

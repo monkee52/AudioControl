@@ -138,6 +138,7 @@
     <ClCompile Include="AudioDevice.cpp" />
     <ClCompile Include="CAudioEndpointVolumeCallback.cpp" />
     <ClCompile Include="CMMNotificationClient.cpp" />
+    <ClCompile Include="DeviceEventArgs.cpp" />
     <ClCompile Include="DeviceStateChangedEventArgs.cpp" />
     <ClCompile Include="MuteStatusChangedEventArgs.cpp" />
     <ClCompile Include="stdafx.cpp">
