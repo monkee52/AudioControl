@@ -144,7 +144,7 @@ namespace AydenIO {
 			GCHandle hThis = GCHandle::Alloc(this, GCHandleType::Weak);
 
 			// Register volume callbacks
-			this->volumeCallback = new CAudioEndpointVolumeCallback(GCHandle::ToIntPtr(hThis).ToPointer());;
+			this->volumeCallback = new CAudioEndpointVolumeCallback(GCHandle::ToIntPtr(hThis).ToPointer());
 
 			hr = this->pVolume->RegisterControlChangeNotify(this->volumeCallback);
 
@@ -191,11 +191,13 @@ namespace AydenIO {
 		/* private */ void AudioDevice::Cleanup() {
 			// Detach volume callback
 			if (this->volumeCallback != nullptr) {
-				// Ignore only possible error code E_POINTER
-				this->pVolume->UnregisterControlChangeNotify(this->volumeCallback);
+				if (this->pVolume != nullptr) {
+					// Ignore only possible error code E_POINTER
+					this->pVolume->UnregisterControlChangeNotify(this->volumeCallback);
 
-				this->volumeCallback->Release();
-				this->volumeCallback = nullptr;
+					this->volumeCallback->Release();
+					this->volumeCallback = nullptr;
+				}
 			}
 
 			if (this->pVolume != nullptr) {

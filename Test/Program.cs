@@ -28,33 +28,41 @@ namespace Test {
                 AudioSession[] sessions = device.GetSessions();
 
                 foreach (AudioSession session in sessions) {
-                    Console.WriteLine("[" + device.Id + "/" + session.Id + "/" + session.InstanceId + "]");
+                    Console.WriteLine("[" + session.InstanceId + "]");
                     Console.WriteLine("IsSystemSounds = " + session.IsSystemSoundsSession.ToString());
                     Console.WriteLine("Process ID     = " + session.ProcessId);
                     Console.WriteLine("Display Name   = " + session.DisplayName);
+                    Console.WriteLine("State          = " + session.State);
                     Console.WriteLine("Muted          = " + session.IsMuted.ToString());
                     Console.WriteLine("Volume         = " + String.Format("{0:0.00}", session.MasterVolume * 100.0));
                     Console.WriteLine();
+
+                    session.MasterVolumeChanged += VolumeChanged;
+                    session.MuteStatusChanged += MuteStatusChanged;
                 }
 
                 Console.Out.Flush();
 
-                device.MasterVolumeChanged += Device_MasterVolumeChanged;
-                device.MuteStatusChanged += Device_MuteStatusChanged;
+                device.MasterVolumeChanged += VolumeChanged;
+                device.MuteStatusChanged += MuteStatusChanged;
             }
 
             Pause();
         }
 
-        private static void Device_MuteStatusChanged(object sender, MuteStatusChangedEventArgs e) {
+        private static void MuteStatusChanged(object sender, MuteStatusChangedEventArgs e) {
             if (sender is AudioDevice device) {
                 Console.WriteLine("{0} {1}.", device.ToString(), e.MuteStatus ? "muted" : "unmuted");
+            } else if (sender is AudioSession session) {
+                Console.WriteLine("{0} {1}", session.InstanceId, e.MuteStatus ? "muted" : "unmuted");
             }
         }
 
-        private static void Device_MasterVolumeChanged(object sender, VolumeChangedEventArgs e) {
+        private static void VolumeChanged(object sender, VolumeChangedEventArgs e) {
             if (sender is AudioDevice device) {
                 Console.WriteLine("{0} volume changed from {1:0.00} to {2:0.00}.", device.ToString(), e.PreviousVolume * 100.0, e.Volume * 100.0);
+            } else if (sender is AudioSession session) {
+                Console.WriteLine("{0} volume changed from {1:0.00} to {2:0.00}.", session.InstanceId, e.PreviousVolume * 100.0, e.Volume * 100.0);
             }
         }
 

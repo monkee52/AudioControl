@@ -26,6 +26,12 @@ namespace AydenIO {
 			Communications = eCommunications // Voice communications (talking to another person).
 		};
 
+		public enum class SessionState {
+			Inactive = AudioSessionStateInactive, // The audio session is inactive. (It contains at least one stream, but none of the streams in the session is currently running.)
+			Active = AudioSessionStateActive, // The audio session is active. (At least one of the streams in the session is running.)
+			Expired = AudioSessionStateExpired // The audio session has expired. (It contains no streams.)
+		};
+
 		ref class Controller;
 		ref class AudioDevice;
 		ref class AudioSession;
@@ -34,6 +40,7 @@ namespace AydenIO {
 		public:
 			static String^ ConvertHrToString(HRESULT hr);
 			static Guid ConvertNativeGuidToGuid(const GUID g);
+			static Guid ConvertNativeGuidToGuid(LPCGUID g);
 			static void SafeRelease(IUnknown** ppT);
 		};
 
@@ -103,6 +110,64 @@ namespace AydenIO {
 			}
 		};
 
+		public ref class DisplayNameChangedEventArgs : public EventArgs {
+		private:
+			Guid _evContext;
+			String^ _previousDisplayName;
+			String^ _displayName;
+		internal:
+			DisplayNameChangedEventArgs(Guid evContext, String^ oldDisplayName, String^ newDisplayName);
+		public:
+			property Guid Context {
+				Guid get();
+			}
+
+			property String^ PreviousDisplayName {
+				String^ get();
+			}
+
+			property String^ DisplayName {
+				String^ get();
+			}
+		};
+
+		public ref class SessionStateChangedEventArgs : public EventArgs {
+		private:
+			SessionState _previousState;
+			SessionState _state;
+		internal:
+			SessionStateChangedEventArgs(SessionState oldState, SessionState newState);
+		public:
+			property SessionState PreviousState {
+				SessionState get();
+			}
+
+			property SessionState State {
+				SessionState get();
+			}
+		};
+
+		private class CAudioSessionEvents : public IAudioSessionEvents {
+		private:
+			LONG _cRef;
+			GCHandle hSession;
+		public:
+			CAudioSessionEvents(void* pSession);
+			~CAudioSessionEvents();
+
+			ULONG STDMETHODCALLTYPE AddRef();
+			ULONG STDMETHODCALLTYPE Release();
+			HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, VOID** ppvInterface);
+
+			HRESULT STDMETHODCALLTYPE OnChannelVolumeChanged(DWORD channelCount, float newChannelVolumes[], DWORD changedChannel, LPCGUID pGuidEvContext);
+			HRESULT STDMETHODCALLTYPE OnDisplayNameChanged(LPCWSTR newDisplayName, LPCGUID pGuidEvContext);
+			HRESULT STDMETHODCALLTYPE OnGroupingParamChanged(LPCGUID newGroupingParam, LPCGUID pGuidEvContext);
+			HRESULT STDMETHODCALLTYPE OnIconPathChanged(LPCWSTR newIconPath, LPCGUID pGuidEvContext);
+			HRESULT STDMETHODCALLTYPE OnSessionDisconnected(AudioSessionDisconnectReason disconnectReason);
+			HRESULT STDMETHODCALLTYPE OnSimpleVolumeChanged(float newVolume, BOOL newMute, LPCGUID pGuidEvContext);
+			HRESULT STDMETHODCALLTYPE OnStateChanged(AudioSessionState newState);
+		};
+
 		public ref class AudioSession : public IDisposable {
 		private:
 			AudioDevice^ device;
@@ -110,17 +175,32 @@ namespace AydenIO {
 			IAudioSessionControl2* pControl;
 			ISimpleAudioVolume* pVolume;
 
+			IAudioSessionEvents* events;
 			bool _isSystemSounds;
 			int _processId;
 			String^ _id;
 			String^ _instanceId;
 			String^ _displayName;
+			float _currVolume;
+			bool _currMuteStatus;
+			SessionState _state;
 
 			~AudioSession();
+
+			void Cleanup();
 		internal:
 			AudioSession(AudioDevice^ device, IAudioSessionControl2* pControl);
+
+			void OnDisplayNameChanged(Guid evContext, String^ newDisplayName);
+			void OnVolumeControlChanged(Guid evContext, bool newMuteStatus, float newVolume);
+			void OnSessionStateChanged(SessionState newState);
 		public:
 			!AudioSession();
+
+			event EventHandler<DisplayNameChangedEventArgs^>^ DisplayNameChanged;
+			event EventHandler<MuteStatusChangedEventArgs^>^ MuteStatusChanged;
+			event EventHandler<VolumeChangedEventArgs^>^ MasterVolumeChanged;
+			event EventHandler<SessionStateChangedEventArgs^>^ StateChanged;
 
 			property String^ Id {
 				String^ get();
@@ -136,6 +216,11 @@ namespace AydenIO {
 
 			property String^ DisplayName {
 				String^ get();
+				void set(String^ newDisplayName);
+			}
+
+			property SessionState State {
+				SessionState get();
 			}
 
 			property bool IsSystemSoundsSession {
@@ -320,27 +405,6 @@ namespace AydenIO {
 			HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, VOID** ppvInterface);
 
 			HRESULT STDMETHODCALLTYPE OnNotify(PAUDIO_VOLUME_NOTIFICATION_DATA pNotify);
-		};
-
-		private class CAudioSessionEvents : public IAudioSessionEvents {
-		private:
-			LONG _cRef;
-			GCHandle hSession;
-		public:
-			CAudioSessionEvents(void* pSession);
-			~CAudioSessionEvents();
-
-			ULONG STDMETHODCALLTYPE AddRef();
-			ULONG STDMETHODCALLTYPE Release();
-			HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, VOID** ppvInterface);
-
-			HRESULT STDMETHODCALLTYPE OnChannelVolumeChanged(DWORD channelCount, float newChannelVolumes[], DWORD changedChannel, LPCGUID evContext);
-			HRESULT STDMETHODCALLTYPE OnDisplayNameChanged(LPCWSTR newDisplayName, LPCGUID evContext);
-			HRESULT STDMETHODCALLTYPE OnGroupingParamChanged(LPCGUID newGroupingParam, LPCGUID evContext);
-			HRESULT STDMETHODCALLTYPE OnIconPathChanged(LPCWSTR newIconPath, LPCGUID evContext);
-			HRESULT STDMETHODCALLTYPE OnSessionDisconnected(AudioSessionDisconnectReason disconnectReason);
-			HRESULT STDMETHODCALLTYPE OnSimpleVolumeChanged(float newVolume, BOOL newMute, LPCGUID evContext);
-			HRESULT STDMETHODCALLTYPE OnStateChanged(AudioSessionState newState);
 		};
 
 		public ref class Controller : public IDisposable {
