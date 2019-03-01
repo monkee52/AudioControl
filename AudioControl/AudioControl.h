@@ -32,6 +32,7 @@ namespace AydenIO {
 		public:
 			static String^ ConvertHrToString(HRESULT hr);
 			static Guid ConvertNativeGuidToGuid(const GUID g);
+			static void SafeRelease(IUnknown** ppT);
 		};
 
 		public ref class MuteStatusChangedEventArgs : public EventArgs {
@@ -211,6 +212,8 @@ namespace AydenIO {
 				/// </summary>
 				void set(float newVolume);
 			}
+
+			array<AudioSession^>^ GetSessions();
 
 			virtual bool Equals(Object^ otherDevice) override;
 			virtual bool Equals(AudioDevice^ otherDevice);

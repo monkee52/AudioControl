@@ -91,10 +91,7 @@ namespace AydenIO {
 			hr = pCollection->GetCount(&count);
 
 			if (FAILED(hr)) {
-				if (pCollection != nullptr) {
-					pCollection->Release();
-					pCollection = nullptr;
-				}
+				Utilities::SafeRelease((IUnknown**)&pCollection);
 
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
@@ -108,27 +105,18 @@ namespace AydenIO {
 				hr = pCollection->Item(i, &pDevice);
 
 				if (FAILED(hr)) {
-					if (pCollection != nullptr) {
-						pCollection->Release();
-						pCollection = nullptr;
-					}
+					Utilities::SafeRelease((IUnknown**)&pCollection);
 
 					throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 				}
 
 				devices[i] = gcnew AudioDevice(this, pDevice);
 
-				if (pDevice != nullptr) {
-					pDevice->Release();
-					pDevice = nullptr;
-				}
+				Utilities::SafeRelease((IUnknown**)&pDevice);
 			}
 
 			// Cleanup
-			if (pCollection != nullptr) {
-				pCollection->Release();
-				pCollection = nullptr;
-			}
+			Utilities::SafeRelease((IUnknown**)&pCollection);
 
 			return devices;
 		}
@@ -153,10 +141,7 @@ namespace AydenIO {
 
 			AudioDevice^ device = gcnew AudioDevice(this, pDevice);
 
-			if (pDevice != nullptr) {
-				pDevice->Release();
-				pDevice = nullptr;
-			}
+			Utilities::SafeRelease((IUnknown**)&pDevice);
 
 			return device;
 		}
@@ -173,10 +158,7 @@ namespace AydenIO {
 
 			AudioDevice^ device = gcnew AudioDevice(this, pDevice);
 
-			if (pDevice != nullptr) {
-				pDevice->Release();
-				pDevice = nullptr;
-			}
+			Utilities::SafeRelease((IUnknown**)&pDevice);
 
 			return device;
 		}

@@ -20,6 +20,7 @@ namespace Test {
                 Console.WriteLine("Description =   " + device.Description);
                 Console.WriteLine("Type =          " + device.Type.ToString());
                 Console.WriteLine("State =         " + device.State.ToString());
+                Console.WriteLine("Role =          " + device);
                 Console.WriteLine("Mute =          " + device.IsMuted.ToString());
                 Console.WriteLine("Volume =        " + String.Format("{0:0.00}", device.MasterVolume * 100.0));
                 Console.WriteLine();

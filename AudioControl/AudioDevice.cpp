@@ -49,10 +49,7 @@ namespace AydenIO {
 
 			if (FAILED(hr)) {
 				// Cleanup - destructor not called if exception thrown in constructor
-				if (pEndpoint != nullptr) {
-					pEndpoint->Release();
-					pEndpoint = nullptr;
-				}
+				Utilities::SafeRelease((IUnknown**)&pEndpoint);
 
 				this->Cleanup();
 
@@ -60,10 +57,7 @@ namespace AydenIO {
 			}
 
 			// Cleanup
-			if (pEndpoint != nullptr) {
-				pEndpoint->Release();
-				pEndpoint = nullptr;
-			}
+			Utilities::SafeRelease((IUnknown**)&pEndpoint);
 
 			this->_type = (DeviceType)eFlow;
 
