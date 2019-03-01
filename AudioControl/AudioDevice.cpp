@@ -272,6 +272,79 @@ namespace AydenIO {
 			}
 		}
 
+		/* public */ array<AudioSession^>^ AudioDevice::GetSessions() {
+			IAudioSessionManager2* pSessMgr = nullptr;
+
+			HRESULT hr = this->pDevice->Activate(__uuidof(IAudioSessionManager2), CLSCTX_ALL, NULL, (void**)&pSessMgr);
+			
+			if (FAILED(hr)) {
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			IAudioSessionEnumerator* pEnumerator = nullptr;
+
+			hr = pSessMgr->GetSessionEnumerator(&pEnumerator);
+
+			if (FAILED(hr)) {
+				Utilities::SafeRelease((IUnknown**)&pSessMgr);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			int sessionCount;
+
+			hr = pEnumerator->GetCount(&sessionCount);
+
+			if (FAILED(hr)) {
+				Utilities::SafeRelease((IUnknown**)&pEnumerator);
+				Utilities::SafeRelease((IUnknown**)&pSessMgr);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			array<AudioSession^>^ sessions = gcnew array<AudioSession^>(sessionCount);
+
+			for (int i = 0; i < sessionCount; i++) {
+				// Get session control
+				IAudioSessionControl* pControl = nullptr;
+
+				hr = pEnumerator->GetSession(i, &pControl);
+
+				if (FAILED(hr)) {
+					Utilities::SafeRelease((IUnknown**)&pEnumerator);
+					Utilities::SafeRelease((IUnknown**)&pSessMgr);
+
+					throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+				}
+
+				// Get session control 2
+				IAudioSessionControl2* pControl2 = nullptr;
+
+				hr = pControl->QueryInterface(__uuidof(IAudioSessionControl2), (void**)&pControl2);
+
+				if (FAILED(hr)) {
+					Utilities::SafeRelease((IUnknown**)&pControl);
+					Utilities::SafeRelease((IUnknown**)&pEnumerator);
+					Utilities::SafeRelease((IUnknown**)&pSessMgr);
+
+					throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+				}
+
+				Utilities::SafeRelease((IUnknown**)&pControl);
+
+				try {
+					sessions[i] = gcnew AudioSession(this, pControl2);
+				} finally{
+					Utilities::SafeRelease((IUnknown**)&pControl2);
+				}
+			}
+
+			Utilities::SafeRelease((IUnknown**)&pEnumerator);
+			Utilities::SafeRelease((IUnknown**)&pSessMgr);
+
+			return sessions;
+		}
+
 		/* public */ bool AudioDevice::Equals(Object^ otherDevice) {
 			if (otherDevice == nullptr) {
 				return false;

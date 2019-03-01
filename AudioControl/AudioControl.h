@@ -27,6 +27,8 @@ namespace AydenIO {
 		};
 
 		ref class Controller;
+		ref class AudioDevice;
+		ref class AudioSession;
 
 		private ref class Utilities {
 		public:
@@ -99,6 +101,58 @@ namespace AydenIO {
 			property DeviceState State {
 				DeviceState get();
 			}
+		};
+
+		public ref class AudioSession : public IDisposable {
+		private:
+			AudioDevice^ device;
+
+			IAudioSessionControl2* pControl;
+			ISimpleAudioVolume* pVolume;
+
+			bool _isSystemSounds;
+			int _processId;
+			String^ _id;
+			String^ _instanceId;
+			String^ _displayName;
+
+			~AudioSession();
+		internal:
+			AudioSession(AudioDevice^ device, IAudioSessionControl2* pControl);
+		public:
+			!AudioSession();
+
+			property String^ Id {
+				String^ get();
+			}
+
+			property String^ InstanceId {
+				String^ get();
+			}
+
+			property int ProcessId {
+				int get();
+			}
+
+			property String^ DisplayName {
+				String^ get();
+			}
+
+			property bool IsSystemSoundsSession {
+				bool get();
+			}
+
+			property float MasterVolume {
+				float get();
+				void set(float newVolume);
+			}
+
+			property bool IsMuted {
+				bool get();
+			}
+
+			void Mute();
+			void Unmute();
 		};
 
 		/// <summary>
@@ -266,6 +320,27 @@ namespace AydenIO {
 			HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, VOID** ppvInterface);
 
 			HRESULT STDMETHODCALLTYPE OnNotify(PAUDIO_VOLUME_NOTIFICATION_DATA pNotify);
+		};
+
+		private class CAudioSessionEvents : public IAudioSessionEvents {
+		private:
+			LONG _cRef;
+			GCHandle hSession;
+		public:
+			CAudioSessionEvents(void* pSession);
+			~CAudioSessionEvents();
+
+			ULONG STDMETHODCALLTYPE AddRef();
+			ULONG STDMETHODCALLTYPE Release();
+			HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, VOID** ppvInterface);
+
+			HRESULT STDMETHODCALLTYPE OnChannelVolumeChanged(DWORD channelCount, float newChannelVolumes[], DWORD changedChannel, LPCGUID evContext);
+			HRESULT STDMETHODCALLTYPE OnDisplayNameChanged(LPCWSTR newDisplayName, LPCGUID evContext);
+			HRESULT STDMETHODCALLTYPE OnGroupingParamChanged(LPCGUID newGroupingParam, LPCGUID evContext);
+			HRESULT STDMETHODCALLTYPE OnIconPathChanged(LPCWSTR newIconPath, LPCGUID evContext);
+			HRESULT STDMETHODCALLTYPE OnSessionDisconnected(AudioSessionDisconnectReason disconnectReason);
+			HRESULT STDMETHODCALLTYPE OnSimpleVolumeChanged(float newVolume, BOOL newMute, LPCGUID evContext);
+			HRESULT STDMETHODCALLTYPE OnStateChanged(AudioSessionState newState);
 		};
 
 		public ref class Controller : public IDisposable {

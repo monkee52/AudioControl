@@ -4,7 +4,7 @@
 
 namespace AydenIO {
 	namespace AudioControl {
-		Controller::Controller() {
+		/* public */ Controller::Controller() {
 			// Init COM
 			HRESULT hr = CoInitialize(NULL);
 
@@ -46,7 +46,7 @@ namespace AydenIO {
 			}
 		}
 
-		Controller::~Controller() {
+		/* private */ Controller::~Controller() {
 			// Detach notification client
 			if (this->notificationClient != nullptr) {
 				// Ignore only possible error codes E_POINTER and E_NOTFOUND
@@ -71,7 +71,7 @@ namespace AydenIO {
 			CoUninitialize();
 		}
 
-		Controller::!Controller() {
+		/* public */ Controller::!Controller() {
 			delete this;
 		}
 
@@ -110,9 +110,11 @@ namespace AydenIO {
 					throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 				}
 
-				devices[i] = gcnew AudioDevice(this, pDevice);
-
-				Utilities::SafeRelease((IUnknown**)&pDevice);
+				try {
+					devices[i] = gcnew AudioDevice(this, pDevice);
+				} finally {
+					Utilities::SafeRelease((IUnknown**)&pDevice);
+				}
 			}
 
 			// Cleanup
@@ -139,9 +141,13 @@ namespace AydenIO {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
-			AudioDevice^ device = gcnew AudioDevice(this, pDevice);
-
-			Utilities::SafeRelease((IUnknown**)&pDevice);
+			AudioDevice^ device;
+			
+			try {
+				device = gcnew AudioDevice(this, pDevice);
+			} finally {
+				Utilities::SafeRelease((IUnknown**)&pDevice);
+			}
 
 			return device;
 		}
@@ -156,9 +162,13 @@ namespace AydenIO {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
-			AudioDevice^ device = gcnew AudioDevice(this, pDevice);
-
-			Utilities::SafeRelease((IUnknown**)&pDevice);
+			AudioDevice^ device;
+			
+			try {
+				device = gcnew AudioDevice(this, pDevice);
+			} finally {
+				Utilities::SafeRelease((IUnknown**)&pDevice);
+			}
 
 			return device;
 		}

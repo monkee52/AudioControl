@@ -134,8 +134,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="AudioControl.cpp" />
+    <ClCompile Include="Controller.cpp" />
     <ClCompile Include="AudioDevice.cpp" />
+    <ClCompile Include="AudioSession.cpp" />
     <ClCompile Include="CAudioEndpointVolumeCallback.cpp" />
     <ClCompile Include="CMMNotificationClient.cpp" />
     <ClCompile Include="DeviceEventArgs.cpp" />

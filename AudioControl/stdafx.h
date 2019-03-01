@@ -10,3 +10,4 @@
 #include <functiondiscoverykeys_devpkey.h>
 #include <endpointvolume.h>
 #include <mmreg.h>
+#include <audiopolicy.h>

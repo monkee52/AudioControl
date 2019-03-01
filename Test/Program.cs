@@ -24,6 +24,19 @@ namespace Test {
                 Console.WriteLine("Mute =          " + device.IsMuted.ToString());
                 Console.WriteLine("Volume =        " + String.Format("{0:0.00}", device.MasterVolume * 100.0));
                 Console.WriteLine();
+
+                AudioSession[] sessions = device.GetSessions();
+
+                foreach (AudioSession session in sessions) {
+                    Console.WriteLine("[" + device.Id + "/" + session.Id + "/" + session.InstanceId + "]");
+                    Console.WriteLine("IsSystemSounds = " + session.IsSystemSoundsSession.ToString());
+                    Console.WriteLine("Process ID     = " + session.ProcessId);
+                    Console.WriteLine("Display Name   = " + session.DisplayName);
+                    Console.WriteLine("Muted          = " + session.IsMuted.ToString());
+                    Console.WriteLine("Volume         = " + String.Format("{0:0.00}", session.MasterVolume * 100.0));
+                    Console.WriteLine();
+                }
+
                 Console.Out.Flush();
 
                 device.MasterVolumeChanged += Device_MasterVolumeChanged;
