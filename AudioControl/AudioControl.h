@@ -32,6 +32,14 @@ namespace AydenIO {
 			Expired = AudioSessionStateExpired // The audio session has expired. (It contains no streams.)
 		};
 
+		enum class PropertyKey {
+			Name,
+			FriendlyName,
+			Description,
+			DefaultFormat,
+			CurrentFormat
+		};
+
 		ref class Controller;
 		ref class AudioDevice;
 		ref class AudioSession;
@@ -144,6 +152,18 @@ namespace AydenIO {
 
 			property SessionState State {
 				SessionState get();
+			}
+		};
+
+		public ref class PropertyValueChangedEventArgs : public EventArgs {
+		private:
+			String^ _deviceId;
+			PropertyKey _key;
+		internal:
+			PropertyValueChangedEventArgs(String^ deviceId, PropertyKey key);
+
+			property String^ DeviceId {
+				String^ get();
 			}
 		};
 
@@ -417,6 +437,9 @@ namespace AydenIO {
 			event EventHandler<DeviceStateChangedEventArgs^>^ DeviceStateChanged;
 			void OnDeviceStateChanged(String^ deviceId, DeviceState newState);
 
+			event EventHandler<PropertyValueChangedEventArgs^>^ PropertyValueChanged;
+			void OnPropertyValueChanged(String^ deviceId, PropertyKey key);
+
 			void OnDeviceAdded(String^ deviceId);
 			void OnDeviceRemoved(String^ deviceId);
 		public:
@@ -449,13 +472,13 @@ namespace AydenIO {
 			/// Sets the default render endpoint
 			/// </summary>
 			/// <param name="endpoint">The endpoint</param>
-			//void SetDefaultAudioDevice(AudioDevice^ device, DeviceRole role);
+			void SetDefaultAudioDevice(AudioDevice^ device, DeviceRole role);
 			
 			/// <summary>
 			/// Sets the default render endpoint
 			/// </summary>
 			/// <param name="endpoint">The endpoint</param>
-			//void SetDefaultAudioDevice(String^ deviceId, DeviceRole role);
+			void SetDefaultAudioDevice(String^ deviceId, DeviceRole role);
 		};
 	}
 }

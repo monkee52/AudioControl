@@ -184,5 +184,17 @@ namespace AydenIO {
 		/* internal */ void Controller::OnDeviceRemoved(String^ deviceId) {
 			this->DeviceRemoved(this, gcnew DeviceEventArgs(this->GetAudioDevice(deviceId)));
 		}
+
+		/* public */ void Controller::SetDefaultAudioDevice(AudioDevice^ device, DeviceRole role) {
+			this->SetDefaultAudioDevice(device->Id, role);
+		}
+
+		/* public */ void Controller::SetDefaultAudioDevice(String^ deviceId, DeviceRole role) {
+
+		}
+
+		/* internal */ void Controller::OnPropertyValueChanged(String^ deviceId, PropertyKey key) {
+			this->PropertyValueChanged(this, gcnew PropertyValueChangedEventArgs(deviceId, key));
+		}
 	}
 }

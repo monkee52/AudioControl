@@ -94,7 +94,19 @@ namespace AydenIO {
 			Controller^ controller = (Controller^)this->hController.Target;
 
 			if (controller != nullptr) {
-				//controller->OnPropertyValueChanged(gcnew String(pwstrDeviceId), key);
+				String^ deviceId = gcnew String(pwstrDeviceId);
+
+				if (key == PKEY_DeviceInterface_FriendlyName) {
+					controller->OnPropertyValueChanged(deviceId, PropertyKey::Name);
+				} else if (key == PKEY_Device_FriendlyName) {
+					controller->OnPropertyValueChanged(deviceId, PropertyKey::FriendlyName);
+				} else if (key == PKEY_Device_DeviceDesc) {
+					controller->OnPropertyValueChanged(deviceId, PropertyKey::Description);
+				} else if (key == PKEY_AudioEngine_OEMFormat) {
+					controller->OnPropertyValueChanged(deviceId, PropertyKey::DefaultFormat);
+				} else if (key == PKEY_AudioEngine_DeviceFormat) {
+					controller->OnPropertyValueChanged(deviceId, PropertyKey::CurrentFormat);
+				}
 			}
 
 			return S_OK;

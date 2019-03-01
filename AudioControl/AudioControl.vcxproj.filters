@@ -65,10 +65,13 @@
     <ClCompile Include="CAudioSessionEvents.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SessionStateChangedEventArgs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="DisplayNameChangedEventArgs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SessionStateChangedEventArgs.cpp">
+    <ClCompile Include="PropertyValueChangedEventArgs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
