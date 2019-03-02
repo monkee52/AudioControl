@@ -9,7 +9,7 @@ namespace AydenIO {
 
 			// Get reference back to managed device
 			IntPtr mpDevice(pDevice);
-			GCHandle hSession = GCHandle::FromIntPtr(mpDevice);
+			GCHandle hDevice = GCHandle::FromIntPtr(mpDevice);
 
 			this->hDevice = hDevice;
 		}
