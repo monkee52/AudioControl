@@ -76,6 +76,7 @@ namespace AydenIO {
 
 			// Subscribe to controller events
 			this->controller->DeviceStateChanged += gcnew EventHandler<DeviceStateChangedEventArgs^>(this, &AudioDevice::OnDeviceStateChanged);
+			this->controller->PropertyValueChanged += gcnew EventHandler<PropertyValueChangedEventArgs^>(this, &AudioDevice::OnPropertyValueChanged);
 
 			// Init properties
 			IPropertyStore* pProps = nullptr;
@@ -160,7 +161,8 @@ namespace AydenIO {
 		}
 
 		/* public */ AudioDevice::!AudioDevice() {
-			this->controller->DeviceStateChanged -= gcnew EventHandler<DeviceStateChangedEventArgs^>(this, &AudioDevice::OnDeviceStateChanged);;
+			this->controller->PropertyValueChanged -= gcnew EventHandler<PropertyValueChangedEventArgs^>(this, &AudioDevice::OnPropertyValueChanged);
+			this->controller->DeviceStateChanged -= gcnew EventHandler<DeviceStateChangedEventArgs^>(this, &AudioDevice::OnDeviceStateChanged);
 
 			delete this;
 		}
@@ -411,7 +413,7 @@ namespace AydenIO {
 
 		/* internal */ void AudioDevice::OnDeviceStateChanged(DeviceStateChangedEventArgs^ e) {
 			// DeviceStateChanged is a controller-wide event, verify that this is the targeted device
-			if (e->DeviceId == this->Id) {
+			if (e->DeviceId == this->_id) {
 				e->PreviousState = this->_currState;
 				this->_currState = e->State;
 
@@ -421,6 +423,42 @@ namespace AydenIO {
 
 		/* internal */ void AudioDevice::OnDeviceStateChanged(Object^ sender, DeviceStateChangedEventArgs^ e) {
 			this->OnDeviceStateChanged(e);
+		}
+
+		/* internal */ void AudioDevice::OnPropertyValueChanged(PropertyValueChangedEventArgs^ e) {
+			// PropertyValueChanged is a controller-wide event, verify that this is the targeted device
+			if (e->DeviceId == this->_id) {
+				switch (e->Key) {
+				case PropertyKey::Name: {
+					String^ oldName = this->_name;
+					this->_name = this->GetPropertyAsString(PKEY_DeviceInterface_FriendlyName);
+
+					this->NameChanged(this, gcnew NameChangedEventArgs(oldName, this->_name));
+
+					break;
+				}
+				case PropertyKey::FriendlyName: {
+					String^ oldFriendlyName = this->_friendlyName;
+					this->_friendlyName = this->GetPropertyAsString(PKEY_Device_FriendlyName);
+
+					this->FriendlyNameChanged(this, gcnew FriendlyNameChangedEventArgs(oldFriendlyName, this->_friendlyName));
+
+					break;
+				}
+				case PropertyKey::Description: {
+					String^ oldDescription = this->_description;
+					this->_description = this->GetPropertyAsString(PKEY_Device_DeviceDesc);
+
+					this->DescriptionChanged(this, gcnew DescriptionChangedEventArgs(oldDescription, this->_description));
+
+					break;
+				}
+				}
+			}
+		}
+
+		/* internal */ void AudioDevice::OnPropertyValueChanged(Object^ sender, PropertyValueChangedEventArgs^ e) {
+			this->OnPropertyValueChanged(e);
 		}
 	}
 }

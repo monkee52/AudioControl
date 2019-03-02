@@ -12,5 +12,9 @@ namespace AydenIO {
 		/* internal */ String^ PropertyValueChangedEventArgs::DeviceId::get() {
 			return this->_deviceId;
 		}
+
+		/* internal */ PropertyKey PropertyValueChangedEventArgs::Key::get() {
+			return this->_key;
+		}
 	}
 }

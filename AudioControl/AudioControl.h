@@ -165,6 +165,58 @@ namespace AydenIO {
 			property String^ DeviceId {
 				String^ get();
 			}
+
+			property PropertyKey Key {
+				PropertyKey get();
+			}
+		};
+
+		public ref class NameChangedEventArgs : public EventArgs {
+		private:
+			String^ _previousName;
+			String^ _name;
+		internal:
+			NameChangedEventArgs(String^ oldName, String^ newName);
+		public:
+			property String^ PreviousName {
+				String^ get();
+			}
+
+			property String^ Name {
+				String^ get();
+			}
+		};
+
+		public ref class FriendlyNameChangedEventArgs : public EventArgs {
+		private:
+			String^ _previousFriendlyName;
+			String^ _friendlyName;
+		internal:
+			FriendlyNameChangedEventArgs(String^ oldFriendlyName, String^ newFriendlyName);
+		public:
+			property String^ PreviousFriendlyName {
+				String^ get();
+			}
+
+			property String^ FriendlyName {
+				String^ get();
+			}
+		};
+
+		public ref class DescriptionChangedEventArgs : public EventArgs {
+		private:
+			String^ _previousDescription;
+			String^ _description;
+		internal:
+			DescriptionChangedEventArgs(String^ oldDescription, String^ newDescription);
+		public:
+			property String^ PreviousDescription {
+				String^ get();
+			}
+
+			property String^ Description {
+				String^ get();
+			}
 		};
 
 		private class CAudioSessionEvents : public IAudioSessionEvents {
@@ -294,12 +346,18 @@ namespace AydenIO {
 
 			void OnDeviceStateChanged(DeviceStateChangedEventArgs^ e);
 			void OnDeviceStateChanged(Object^ sender, DeviceStateChangedEventArgs^ e);
+
+			void OnPropertyValueChanged(PropertyValueChangedEventArgs^ e);
+			void OnPropertyValueChanged(Object^ sender, PropertyValueChangedEventArgs^ e);
 		public:
 			!AudioDevice();
 
 			event EventHandler<MuteStatusChangedEventArgs^>^ MuteStatusChanged;
 			event EventHandler<VolumeChangedEventArgs^>^ MasterVolumeChanged;
 			event EventHandler<DeviceStateChangedEventArgs^>^ StateChanged;
+			event EventHandler<NameChangedEventArgs^>^ NameChanged;
+			event EventHandler<FriendlyNameChangedEventArgs^>^ FriendlyNameChanged;
+			event EventHandler<DescriptionChangedEventArgs^>^ DescriptionChanged;
 
 			/// <summary>
 			/// Gets the system defined identifier for the endpoint
