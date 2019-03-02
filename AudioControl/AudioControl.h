@@ -219,6 +219,17 @@ namespace AydenIO {
 			}
 		};
 
+		public ref class SessionCreatedEventArgs : public EventArgs {
+		private:
+			AudioSession^ _session;
+		internal:
+			SessionCreatedEventArgs(AudioSession^ session);
+		public:
+			property AudioSession^ Session {
+				AudioSession^ get();
+			}
+		};
+
 		private class CAudioSessionEvents : public IAudioSessionEvents {
 		private:
 			LONG _cRef;
@@ -238,6 +249,21 @@ namespace AydenIO {
 			HRESULT STDMETHODCALLTYPE OnSessionDisconnected(AudioSessionDisconnectReason disconnectReason);
 			HRESULT STDMETHODCALLTYPE OnSimpleVolumeChanged(float newVolume, BOOL newMute, LPCGUID pGuidEvContext);
 			HRESULT STDMETHODCALLTYPE OnStateChanged(AudioSessionState newState);
+		};
+
+		private class CAudioSessionNotification : public IAudioSessionNotification {
+		private:
+			LONG _cRef;
+			GCHandle hDevice;
+		public:
+			CAudioSessionNotification(void* pDevice);
+			~CAudioSessionNotification();
+
+			ULONG STDMETHODCALLTYPE AddRef();
+			ULONG STDMETHODCALLTYPE Release();
+			HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, VOID** ppvInterface);
+
+			HRESULT STDMETHODCALLTYPE OnSessionCreated(IAudioSessionControl* pNewSession);
 		};
 
 		public ref class AudioSession : public IDisposable {
@@ -322,8 +348,10 @@ namespace AydenIO {
 			IMMDevice* pDevice;
 			IPropertyStore* pProps;
 			IAudioEndpointVolume* pVolume;
+			IAudioSessionManager2* pSessMgr;
 
 			IAudioEndpointVolumeCallback* volumeCallback;
+			IAudioSessionNotification* sessionNotification;
 			DeviceState _currState;
 			bool _currMuteStatus;
 			float _currMasterVolume;
@@ -343,6 +371,7 @@ namespace AydenIO {
 
 			void OnMuteStatusChanged(Guid evContext, bool newMuteStatus);
 			void OnMasterVolumeChanged(Guid evContext, float newMasterVolume);
+			void OnSessionCreated(AudioSession^ session);
 
 			void OnDeviceStateChanged(DeviceStateChangedEventArgs^ e);
 			void OnDeviceStateChanged(Object^ sender, DeviceStateChangedEventArgs^ e);
@@ -358,6 +387,8 @@ namespace AydenIO {
 			event EventHandler<NameChangedEventArgs^>^ NameChanged;
 			event EventHandler<FriendlyNameChangedEventArgs^>^ FriendlyNameChanged;
 			event EventHandler<DescriptionChangedEventArgs^>^ DescriptionChanged;
+
+			event EventHandler<SessionCreatedEventArgs^>^ SessionCreated;
 
 			/// <summary>
 			/// Gets the system defined identifier for the endpoint

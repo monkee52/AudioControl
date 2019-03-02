@@ -135,6 +135,7 @@
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="CAudioSessionEvents.cpp" />
+    <ClCompile Include="CAudioSessionNotification.cpp" />
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="AudioDevice.cpp" />
     <ClCompile Include="AudioSession.cpp" />
@@ -148,6 +149,7 @@
     <ClCompile Include="MuteStatusChangedEventArgs.cpp" />
     <ClCompile Include="NameChangedEventArgs.cpp" />
     <ClCompile Include="PropertyValueChangedEventArgs.cpp" />
+    <ClCompile Include="SessionCreatedEventArgs.cpp" />
     <ClCompile Include="SessionStateChangedEventArgs.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

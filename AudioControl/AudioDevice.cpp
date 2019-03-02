@@ -154,6 +154,30 @@ namespace AydenIO {
 
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
+
+			// Init session manager
+			IAudioSessionManager2* pSessMgr = nullptr;
+
+			hr = this->pDevice->Activate(__uuidof(IAudioSessionManager2), CLSCTX_ALL, NULL, (void**)&pSessMgr);
+
+			if (FAILED(hr)) {
+				this->Cleanup();
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			this->pSessMgr = pSessMgr;
+
+			// Register session callbacks
+			this->sessionNotification = new CAudioSessionNotification(GCHandle::ToIntPtr(hThis).ToPointer());
+
+			hr = this->pSessMgr->RegisterSessionNotification(this->sessionNotification);
+
+			if (FAILED(hr)) {
+				this->Cleanup();
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
 		}
 
 		/* private */ AudioDevice::~AudioDevice() {
@@ -191,6 +215,22 @@ namespace AydenIO {
 		}
 
 		/* private */ void AudioDevice::Cleanup() {
+			// Detach session notifications
+			if (this->sessionNotification != nullptr) {
+				if (this->pSessMgr != nullptr) {
+					// Ignore only possible error code E_POINTER
+					this->pSessMgr->UnregisterSessionNotification(this->sessionNotification);
+
+					this->sessionNotification->Release();
+					this->sessionNotification = nullptr;
+				}
+			}
+
+			if (this->pSessMgr != nullptr) {
+				this->pSessMgr->Release();
+				this->pSessMgr = nullptr;
+			}
+
 			// Detach volume callback
 			if (this->volumeCallback != nullptr) {
 				if (this->pVolume != nullptr) {
@@ -277,74 +317,65 @@ namespace AydenIO {
 		}
 
 		/* public */ array<AudioSession^>^ AudioDevice::GetSessions() {
-			IAudioSessionManager2* pSessMgr = nullptr;
-
-			HRESULT hr = this->pDevice->Activate(__uuidof(IAudioSessionManager2), CLSCTX_ALL, NULL, (void**)&pSessMgr);
-			
-			if (FAILED(hr)) {
-				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
-			}
-
 			IAudioSessionEnumerator* pEnumerator = nullptr;
 
-			hr = pSessMgr->GetSessionEnumerator(&pEnumerator);
+			HRESULT hr = this->pSessMgr->GetSessionEnumerator(&pEnumerator);
 
 			if (FAILED(hr)) {
-				Utilities::SafeRelease((IUnknown**)&pSessMgr);
-
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
 
-			int sessionCount;
+			array<AudioSession^>^ sessions;
 
-			hr = pEnumerator->GetCount(&sessionCount);
+			try {
+				int sessionCount;
 
-			if (FAILED(hr)) {
-				Utilities::SafeRelease((IUnknown**)&pEnumerator);
-				Utilities::SafeRelease((IUnknown**)&pSessMgr);
-
-				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
-			}
-
-			array<AudioSession^>^ sessions = gcnew array<AudioSession^>(sessionCount);
-
-			for (int i = 0; i < sessionCount; i++) {
-				// Get session control
-				IAudioSessionControl* pControl = nullptr;
-
-				hr = pEnumerator->GetSession(i, &pControl);
+				hr = pEnumerator->GetCount(&sessionCount);
 
 				if (FAILED(hr)) {
 					Utilities::SafeRelease((IUnknown**)&pEnumerator);
-					Utilities::SafeRelease((IUnknown**)&pSessMgr);
 
 					throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 				}
 
-				// Get session control 2
-				IAudioSessionControl2* pControl2 = nullptr;
+				sessions = gcnew array<AudioSession^>(sessionCount);
 
-				hr = pControl->QueryInterface(__uuidof(IAudioSessionControl2), (void**)&pControl2);
+				for (int i = 0; i < sessionCount; i++) {
+					// Get session control
+					IAudioSessionControl* pControl = nullptr;
 
-				if (FAILED(hr)) {
+					hr = pEnumerator->GetSession(i, &pControl);
+
+					if (FAILED(hr)) {
+						Utilities::SafeRelease((IUnknown**)&pEnumerator);
+
+						throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+					}
+
+					// Get session control 2
+					IAudioSessionControl2* pControl2 = nullptr;
+
+					hr = pControl->QueryInterface(__uuidof(IAudioSessionControl2), (void**)&pControl2);
+
+					if (FAILED(hr)) {
+						Utilities::SafeRelease((IUnknown**)&pControl);
+						Utilities::SafeRelease((IUnknown**)&pEnumerator);
+
+						throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+					}
+
 					Utilities::SafeRelease((IUnknown**)&pControl);
-					Utilities::SafeRelease((IUnknown**)&pEnumerator);
-					Utilities::SafeRelease((IUnknown**)&pSessMgr);
 
-					throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+					try {
+						sessions[i] = gcnew AudioSession(this, pControl2);
+					}
+					finally{
+						Utilities::SafeRelease((IUnknown**)&pControl2);
+					}
 				}
-
-				Utilities::SafeRelease((IUnknown**)&pControl);
-
-				try {
-					sessions[i] = gcnew AudioSession(this, pControl2);
-				} finally{
-					Utilities::SafeRelease((IUnknown**)&pControl2);
-				}
+			} finally {
+				Utilities::SafeRelease((IUnknown**)&pEnumerator);
 			}
-
-			Utilities::SafeRelease((IUnknown**)&pEnumerator);
-			Utilities::SafeRelease((IUnknown**)&pSessMgr);
 
 			return sessions;
 		}
@@ -459,6 +490,10 @@ namespace AydenIO {
 
 		/* internal */ void AudioDevice::OnPropertyValueChanged(Object^ sender, PropertyValueChangedEventArgs^ e) {
 			this->OnPropertyValueChanged(e);
+		}
+
+		/* internal */ void AudioDevice::OnSessionCreated(AudioSession^ session) {
+			this->SessionCreated(this, gcnew SessionCreatedEventArgs(session));
 		}
 	}
 }
