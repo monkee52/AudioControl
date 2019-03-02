@@ -40,6 +40,15 @@ namespace AydenIO {
 			CurrentFormat
 		};
 
+		public enum class SessionDisconnectReason {
+			Removal = DisconnectReasonDeviceRemoval, // The user removed the audio endpoint device.
+			ServerShutdown = DisconnectReasonServerShutdown, // The Windows audio service has stopped.
+			FormatChanged = DisconnectReasonFormatChanged, // The stream format changed for the device that the audio session is connected to.
+			SessionLogoff = DisconnectReasonSessionLogoff, // The user logged off the Windows Terminal Services (WTS) session that the audio session was running in.
+			SessionDisconnected = DisconnectReasonSessionDisconnected, // The WTS session that the audio session was running in was disconnected.
+			ExclusiveModeOverride = DisconnectReasonExclusiveModeOverride // The (shared-mode) audio session was disconnected to make the audio endpoint device available for an exclusive-mode connection.
+		};
+
 		ref class Controller;
 		ref class AudioDevice;
 		ref class AudioSession;
@@ -230,6 +239,17 @@ namespace AydenIO {
 			}
 		};
 
+		public ref class SessionDisconnectedEventArgs : public EventArgs {
+		private:
+			SessionDisconnectReason _reason;
+		internal:
+			SessionDisconnectedEventArgs(SessionDisconnectReason reason);
+		public:
+			property SessionDisconnectReason Reason {
+				SessionDisconnectReason get();
+			}
+		};
+
 		private class CAudioSessionEvents : public IAudioSessionEvents {
 		private:
 			LONG _cRef;
@@ -292,6 +312,7 @@ namespace AydenIO {
 			void OnDisplayNameChanged(Guid evContext, String^ newDisplayName);
 			void OnVolumeControlChanged(Guid evContext, bool newMuteStatus, float newVolume);
 			void OnSessionStateChanged(SessionState newState);
+			void OnSessionDisconnected(SessionDisconnectReason reason);
 		public:
 			!AudioSession();
 
@@ -299,6 +320,7 @@ namespace AydenIO {
 			event EventHandler<MuteStatusChangedEventArgs^>^ MuteStatusChanged;
 			event EventHandler<VolumeChangedEventArgs^>^ MasterVolumeChanged;
 			event EventHandler<SessionStateChangedEventArgs^>^ StateChanged;
+			event EventHandler<SessionDisconnectedEventArgs^>^ Disconnected;
 
 			property String^ Id {
 				String^ get();

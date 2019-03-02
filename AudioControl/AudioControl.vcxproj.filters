@@ -89,6 +89,9 @@
     <ClCompile Include="CAudioSessionNotification.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SessionDisconnectedEventArgs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc">

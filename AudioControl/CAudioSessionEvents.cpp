@@ -84,6 +84,12 @@ namespace AydenIO {
 		}
 
 		/* public */ HRESULT CAudioSessionEvents::OnSessionDisconnected(AudioSessionDisconnectReason disconnectReason) {
+			AudioSession^ session = (AudioSession^)this->hSession.Target;
+
+			if (session != nullptr) {
+				session->OnSessionDisconnected((SessionDisconnectReason)disconnectReason);
+			}
+
 			return S_OK;
 		}
 

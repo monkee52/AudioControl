@@ -280,5 +280,9 @@ namespace AydenIO {
 				this->StateChanged(this, gcnew SessionStateChangedEventArgs(oldState, newState));
 			}
 		}
+
+		/* internal */ void AudioSession::OnSessionDisconnected(SessionDisconnectReason reason) {
+			this->Disconnected(this, gcnew SessionDisconnectedEventArgs(reason));
+		}
 	}
 }
