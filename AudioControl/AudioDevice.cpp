@@ -81,7 +81,13 @@ namespace AydenIO {
 			// Init properties
 			IPropertyStore* pProps = nullptr;
 
-			hr = this->pDevice->OpenPropertyStore(STGM_READ, &pProps);
+			// Optimistic - has administrator permissions
+			hr = this->pDevice->OpenPropertyStore(STGM_READWRITE, &pProps);
+
+			// Pessimistic
+			if (hr == E_ACCESSDENIED) {
+				hr = this->pDevice->OpenPropertyStore(STGM_READ, &pProps);
+			}
 
 			if (FAILED(hr)) {
 				this->Cleanup();
@@ -197,6 +203,7 @@ namespace AydenIO {
 
 			PropVariantInit(&varProperty);
 
+			// Get value
 			HRESULT hr = this->pProps->GetValue(key, &varProperty);
 
 			if (FAILED(hr)) {
@@ -286,6 +293,14 @@ namespace AydenIO {
 			return this->_currMuteStatus;
 		}
 
+		/* public */ void AudioDevice::IsMuted::set(bool newMuteStatus) {
+			if (newMuteStatus) {
+				this->Mute();
+			} else {
+				this->Unmute();
+			}
+		}
+
 		/* public */ void AudioDevice::Mute() {
 			HRESULT hr = this->pVolume->SetMute(TRUE, NULL);
 
@@ -314,6 +329,57 @@ namespace AydenIO {
 			if (FAILED(hr)) {
 				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
 			}
+		}
+
+		/* public */ bool AudioDevice::SystemEffectsEnabled::get() {
+			// Prepare to get value
+			PROPVARIANT varProperty;
+
+			PropVariantInit(&varProperty);
+
+			// Get value
+			HRESULT hr = this->pProps->GetValue(PKEY_AudioEndpoint_Disable_SysFx, &varProperty);
+
+			if (FAILED(hr)) {
+				// Cleanup
+				PropVariantClear(&varProperty);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			// Convert to managed and cleanup
+			bool value = varProperty.ulVal == ENDPOINT_SYSFX_ENABLED;
+
+			PropVariantClear(&varProperty);
+
+			return value;
+		}
+
+		/* public */ void AudioDevice::SystemEffectsEnabled::set(bool newFxEnabled) {
+			// Prepare to set value
+			PROPVARIANT varProperty;
+
+			PropVariantInit(&varProperty);
+
+			varProperty.vt = VT_UI4;
+			
+			if (newFxEnabled) {
+				varProperty.ulVal = ENDPOINT_SYSFX_ENABLED;
+			} else {
+				varProperty.ulVal = ENDPOINT_SYSFX_DISABLED;
+			}
+
+			// Set value
+			HRESULT hr = this->pProps->SetValue(PKEY_AudioEndpoint_Disable_SysFx, varProperty);
+
+			if (FAILED(hr)) {
+				// Cleanup
+				PropVariantClear(&varProperty);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			PropVariantClear(&varProperty);
 		}
 
 		/* public */ array<AudioSession^>^ AudioDevice::GetSessions() {

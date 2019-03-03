@@ -23,6 +23,7 @@ namespace Test {
                 Console.WriteLine("Role =          " + device);
                 Console.WriteLine("Mute =          " + device.IsMuted.ToString());
                 Console.WriteLine("Volume =        " + String.Format("{0:0.00}", device.MasterVolume * 100.0));
+                Console.WriteLine("SysFx Enabled = " + device.SystemEffectsEnabled.ToString());
                 Console.WriteLine();
 
                 AudioSession[] sessions = device.GetSessions();

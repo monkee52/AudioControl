@@ -480,6 +480,11 @@ namespace AydenIO {
 				/// Returns whether the device is muted.
 				/// </summary>
 				bool get();
+
+				/// <summary>
+				/// Sets whether the device is muted.
+				/// </summary>
+				void set(bool newMuteStatus);
 			}
 
 			/// <summary>
@@ -502,6 +507,18 @@ namespace AydenIO {
 				/// Sets the current master volume
 				/// </summary>
 				void set(float newVolume);
+			}
+
+			property bool SystemEffectsEnabled {
+				/// <summary>
+				/// Returns whether system fx are enabled
+				/// </summary>
+				bool get();
+
+				/// <summary>
+				/// Sets whether system fx are enabled. Requires administrator privileges
+				/// </summary>
+				void set(bool newFxEnabled);
 			}
 
 			array<AudioSession^>^ GetSessions();
