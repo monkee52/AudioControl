@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "AudioControl.h"
+#include "PolicyConfig.h"
 
 namespace AydenIO {
 	namespace AudioControl {
@@ -190,7 +191,27 @@ namespace AydenIO {
 		}
 
 		/* public */ void Controller::SetDefaultAudioDevice(String^ deviceId, DeviceRole role) {
+			IPolicyConfigVista* pPolicyConfig = nullptr;
 
+			HRESULT hr = CoCreateInstance(__uuidof(CPolicyConfigVistaClient), NULL, CLSCTX_ALL, IID_PPV_ARGS(&pPolicyConfig));
+
+			if (FAILED(hr)) {
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			// Convert managed id to native
+			IntPtr hId = Marshal::StringToHGlobalUni(deviceId);
+			LPWSTR pwszId = (LPWSTR)hId.ToPointer();
+
+			hr = pPolicyConfig->SetDefaultEndpoint(pwszId, (ERole)role);
+
+			if (FAILED(hr)) {
+				Marshal::FreeHGlobal(hId);
+
+				throw gcnew ApplicationException(Utilities::ConvertHrToString(hr));
+			}
+
+			Marshal::FreeHGlobal(hId);
 		}
 
 		/* internal */ void Controller::OnPropertyValueChanged(String^ deviceId, PropertyKey key) {
