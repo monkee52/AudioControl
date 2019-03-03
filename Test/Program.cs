@@ -47,7 +47,23 @@ namespace Test {
                 device.MuteStatusChanged += MuteStatusChanged;
             }
 
+            audioController.DefaultDeviceChanged += DefaultDeviceChanged;
+            audioController.DeviceAdded += DeviceAdded;
+            audioController.DeviceRemoved += DeviceRemoved;
+
             Pause();
+        }
+
+        private static void DeviceAdded(object sender, DeviceEventArgs e) {
+            Console.WriteLine("Device added: " + e.Device.ToString());
+        }
+
+        private static void DeviceRemoved(object sender, DeviceEventArgs e) {
+            Console.WriteLine("Device removed: " + e.Device.ToString());
+        }
+
+        private static void DefaultDeviceChanged(object sender, DefaultDeviceChangedEventArgs e) {
+            Console.WriteLine("Default " + e.Type.ToString().ToLower() + " device for " + e.Role.ToString().ToLower() + " changed to " + e.Device.ToString());
         }
 
         private static void MuteStatusChanged(object sender, MuteStatusChangedEventArgs e) {

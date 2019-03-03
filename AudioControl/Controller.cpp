@@ -125,7 +125,7 @@ namespace AydenIO {
 
 		/* public */ AudioDevice^ Controller::GetAudioDevice(String^ id) {
 			// Convert ID to native string
-			IntPtr hId = Marshal::StringToHGlobalAnsi(id);
+			IntPtr hId = Marshal::StringToHGlobalUni(id);
 			LPWSTR wszId = (LPWSTR)hId.ToPointer();
 
 			// Get device
@@ -195,6 +195,10 @@ namespace AydenIO {
 
 		/* internal */ void Controller::OnPropertyValueChanged(String^ deviceId, PropertyKey key) {
 			this->PropertyValueChanged(this, gcnew PropertyValueChangedEventArgs(deviceId, key));
+		}
+
+		/* internal */ void Controller::OnDefaultDeviceChanged(String^ deviceId, DeviceType type, DeviceRole role) {
+			this->DefaultDeviceChanged(this, gcnew DefaultDeviceChangedEventArgs(this->GetAudioDevice(deviceId), type, role));
 		}
 	}
 }

@@ -250,6 +250,27 @@ namespace AydenIO {
 			}
 		};
 
+		public ref class DefaultDeviceChangedEventArgs : public EventArgs {
+		private:
+			AudioDevice^ _device;
+			DeviceType _type;
+			DeviceRole _role;
+		internal:
+			DefaultDeviceChangedEventArgs(AudioDevice^ device, DeviceType type, DeviceRole role);
+		public:
+			property AudioDevice^ Device {
+				AudioDevice^ get();
+			}
+
+			property DeviceType Type {
+				DeviceType get();
+			}
+
+			property DeviceRole Role {
+				DeviceRole get();
+			}
+		};
+
 		private class CAudioSessionEvents : public IAudioSessionEvents {
 		private:
 			LONG _cRef;
@@ -553,9 +574,11 @@ namespace AydenIO {
 
 			void OnDeviceAdded(String^ deviceId);
 			void OnDeviceRemoved(String^ deviceId);
+			void OnDefaultDeviceChanged(String^ deviceId, DeviceType type, DeviceRole role);
 		public:
 			event EventHandler<DeviceEventArgs^>^ DeviceAdded;
 			event EventHandler<DeviceEventArgs^>^ DeviceRemoved;
+			event EventHandler<DefaultDeviceChangedEventArgs^>^ DefaultDeviceChanged;
 
 			Controller();
 			!Controller();

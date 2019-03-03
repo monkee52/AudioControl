@@ -55,7 +55,11 @@ namespace AydenIO {
 		}
 
 		/* public */ HRESULT CMMNotificationClient::OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR pwstrDefaultDevice) {
-			//((Controller^)this->hController.Target)->
+			Controller^ controller = (Controller^)this->hController.Target;
+
+			if (controller != nullptr) {
+				controller->OnDefaultDeviceChanged(gcnew String(pwstrDefaultDevice), (DeviceType)flow, (DeviceRole)role);
+			}
 
 			return S_OK;
 		}

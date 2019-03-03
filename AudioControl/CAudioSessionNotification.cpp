@@ -73,7 +73,7 @@ namespace AydenIO {
 				device->OnSessionCreated(session);
 			}
 
-			Utilities::SafeRelease((IUnknown**)pSession2);
+			Utilities::SafeRelease((IUnknown**)&pSession2);
 
 			return S_OK;
 		}
