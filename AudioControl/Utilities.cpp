@@ -10,7 +10,7 @@ namespace AydenIO {
 
 			// Include error code in message
 			LPTSTR text = (LPTSTR)err.ErrorMessage();
-			size_t len = 13 + _tcslen(text); // 13 is the length of the string below when formatted
+			size_t len = 13 + _tcslen(text); // 13 is the length of the string below when formatted, inc. null terminator
 			LPTSTR result = new TCHAR[len];
 
 			_sntprintf_s(result, len, _TRUNCATE, _T("%#010x: %s"), hr, text);
@@ -30,7 +30,7 @@ namespace AydenIO {
 
 		/* public static */ Guid Utilities::ConvertNativeGuidToGuid(LPCGUID g) {
 			if (g == nullptr) {
-				throw gcnew ApplicationException(Utilities::ConvertHrToString(E_POINTER));
+				throw gcnew NullReferenceException();
 			}
 
 			return Guid(g->Data1, g->Data2, g->Data3, g->Data4[0], g->Data4[1], g->Data4[2], g->Data4[3], g->Data4[4], g->Data4[5], g->Data4[6], g->Data4[7]);

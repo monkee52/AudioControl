@@ -84,7 +84,7 @@ namespace AydenIO {
 			// Optimistic - has administrator permissions
 			hr = this->pDevice->OpenPropertyStore(STGM_READWRITE, &pProps);
 
-			// Pessimistic
+			// Pessimistic - user does not have administrator permissions
 			if (hr == E_ACCESSDENIED) {
 				hr = this->pDevice->OpenPropertyStore(STGM_READ, &pProps);
 			}
