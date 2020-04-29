@@ -35,6 +35,12 @@
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -52,6 +58,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="app.manifest" />
+    <None Include="AVPSB-AVPSBCA01-CA-CS-Ayden_Hull.pfx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AudioControl\AudioControl.vcxproj">
@@ -60,4 +67,7 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>"C:\Program Files (x86)\Windows Kits\8.1\bin\x86\signtool.exe" sign /tr "http://timestamp.digicert.com" /td sha384 /fd sha384 /v /sha1 "c54f98d11293185fcd8b8eb723c86648d3350222" "$(TargetPath)"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

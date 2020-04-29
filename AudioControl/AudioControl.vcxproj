@@ -75,15 +75,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>AydenIO.AudioControl</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>AydenIO.AudioControl</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>AydenIO.AudioControl</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>AydenIO.AudioControl</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -116,6 +120,15 @@
     <Link>
       <AdditionalDependencies />
     </Link>
+    <CustomBuildStep>
+      <Command>"C:\Program Files (x86)\Windows Kits\8.1\bin\x86\signtool.exe" sign /tr "http://timestamp.digicert.com" /td sha384 /fd sha384 /v /sha1 "c54f98d11293185fcd8b8eb723c86648d3350222" "$(TargetPath)" &gt; "$(OutDir)sign\$(ProjectName)-sign.out"</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Signing $(TargetPath)</Message>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Outputs>$(OutDir)sign\$(ProjectName)-sign.out</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -126,6 +139,15 @@
     <Link>
       <AdditionalDependencies />
     </Link>
+    <CustomBuildStep>
+      <Command>"C:\Program Files (x86)\Windows Kits\8.1\bin\x86\signtool.exe" sign /tr "http://timestamp.digicert.com" /td sha384 /fd sha384 /v /sha1 "c54f98d11293185fcd8b8eb723c86648d3350222" "$(TargetPath)" &gt; "$(OutDir)sign\$(ProjectName)-sign.out"</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Signing $(TargetPath)</Message>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Outputs>$(OutDir)sign\$(ProjectName)-sign.out</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AudioControl.h" />
